@@ -86,7 +86,7 @@ export function PlayerSetupCard({
           {expansionsOf(CORPORATIONS).map((exp) => (
             <optgroup key={exp} label={exp}>
               {CORPORATIONS.filter((c) => c.expansion === exp).map((c) => (
-                <option key={c.id} value={c.id} disabled={takenCorporations.has(c.id)}>
+                <option key={c.id} value={c.id} disabled={!c.repeatable && takenCorporations.has(c.id)}>
                   {c.name} · {c.startingMC} M€
                 </option>
               ))}

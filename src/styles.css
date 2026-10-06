@@ -604,3 +604,125 @@ option, optgroup { background: var(--surface); color: var(--text); }
   font-weight: 500;
 }
 .reminder > svg { color: var(--c-venus); flex-shrink: 0; }
+
+/* ---------- Hitos, premios y puntos ---------- */
+.segmented.three { grid-template-columns: repeat(3, 1fr); }
+.segmented.three button { font-size: 0.85rem; padding: 0 4px; }
+
+.milestones, .score { display: flex; flex-direction: column; gap: 12px; }
+.ma-section {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px; display: flex; flex-direction: column;
+}
+.ma-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.ma-head h2 { display: flex; align-items: center; gap: 6px; }
+.ma-row {
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 10px 0; border-top: 1px solid var(--border);
+}
+.ma-top { display: flex; align-items: center; gap: 10px; }
+.claim-prompt {
+  background: var(--surface-2); border-radius: var(--radius-sm); padding: 10px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.claim-prompt .field input { background: var(--surface); }
+.ma-info { flex: 1; display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.ma-info small { font-size: 0.75rem; }
+.ma-ok { color: var(--success); display: inline-flex; align-items: center; gap: 3px; font-weight: 500; }
+.ma-row.taken .ma-info strong { color: var(--muted); }
+.ma-owner {
+  display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0;
+  font-size: 0.82rem; font-weight: 500;
+  background: var(--surface-2); border-radius: 999px; padding: 4px 10px;
+}
+.ma-owner .dot { background: var(--p-color); }
+.ma-badge {
+  flex-shrink: 0; font-size: 0.75rem; font-weight: 600;
+  background: var(--accent-soft); color: var(--accent-text); border-radius: 999px; padding: 4px 10px;
+}
+.ma-section .hint { margin-top: 8px; }
+
+.score-table {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 4px 12px 12px; display: flex; flex-direction: column;
+}
+.score-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.score-row.current .score-who strong { color: var(--accent-text); }
+.score-pos { width: 1.5ch; color: var(--muted); font-weight: 600; text-align: center; }
+.score-who { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.score-who strong { display: flex; align-items: center; gap: 6px; }
+.score-who .dot { background: var(--p-color); }
+.score-who small { font-size: 0.72rem; }
+.score-total { display: flex; flex-direction: column; align-items: center; font-size: 1.5rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.score-total small { font-size: 0.65rem; color: var(--muted); font-weight: 500; }
+.score-table .hint { margin-top: 10px; }
+
+.score-counters {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px; display: flex; flex-direction: column; gap: 4px;
+}
+.score-counter { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-top: 1px solid var(--border); }
+.score-counter:first-of-type { border-top: none; }
+.score-counter-label { font-weight: 500; font-size: 0.9rem; }
+.score-counter small { font-size: 0.72rem; }
+.score-counter-value { min-width: 2ch; text-align: center; font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ---------- Final de la partida ---------- */
+.final { display: flex; flex-direction: column; gap: 12px; }
+.final-steps {
+  list-style: none; margin: 0; padding: 4px;
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px;
+  background: var(--surface-2); border-radius: var(--radius);
+}
+.final-steps li {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  min-height: 36px; border-radius: var(--radius-sm);
+  font-size: 0.78rem; font-weight: 500; color: var(--muted); text-align: center;
+}
+.final-steps li span {
+  width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+  display: grid; place-items: center; font-size: 0.68rem;
+  border: 1px solid currentColor;
+}
+.final-steps li.on { background: var(--surface); color: var(--text); box-shadow: 0 0 0 1px var(--border); }
+.final-steps li.on span { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+.final-steps li.done span { background: var(--success); border-color: var(--success); color: var(--surface); }
+
+.final-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 12px; display: flex; flex-direction: column; gap: 10px;
+}
+.final-row { display: flex; align-items: center; gap: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.final-row:first-child { border-top: none; padding-top: 0; }
+.final-row small { display: block; font-size: 0.75rem; }
+.final-name { display: inline-flex; align-items: center; gap: 6px; }
+.final-name .dot { background: var(--p-color); }
+
+.final-award { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--border); }
+.final-award small { font-size: 0.75rem; }
+.award-values { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.85rem; }
+.award-input { display: flex; align-items: center; gap: 6px; font-size: 0.85rem; }
+.award-input input {
+  width: 58px; min-height: 36px; border-radius: var(--radius-sm);
+  border: 1px solid var(--border); background: var(--bg); padding: 0 8px; font-size: 1rem; color: var(--text);
+}
+
+.final-winner {
+  display: flex; align-items: center; gap: 14px;
+  background: var(--accent-soft); color: var(--accent-text);
+  border-radius: var(--radius); padding: 16px;
+}
+.final-winner div { display: flex; flex-direction: column; gap: 2px; }
+.final-winner strong { font-size: 1.1rem; }
+.final-winner small { font-size: 0.8rem; }
+
+.result-player { display: flex; flex-direction: column; gap: 8px; padding-top: 10px; border-top: 1px solid var(--border); }
+.result-player:nth-child(2) { border-top: none; padding-top: 0; }
+.result-head { display: flex; align-items: center; gap: 10px; }
+.result-parts {
+  margin: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px;
+  background: var(--surface-2); border-radius: var(--radius-sm); padding: 6px;
+}
+.result-parts div { display: flex; flex-direction: column; align-items: center; gap: 1px; }
+.result-parts dt { font-size: 0.62rem; color: var(--muted); }
+.result-parts dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }

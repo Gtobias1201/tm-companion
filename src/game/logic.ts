@@ -9,8 +9,19 @@ import {
   LIMITS,
   RESEARCH_CARDS,
   RESOURCE_INFO,
+  SOLO_GENERATIONS,
   formatTemperature,
 } from './constants';
+import {
+  AWARD_COSTS,
+  AWARD_VP,
+  MAX_MILESTONES,
+  MILESTONE_COST,
+  MILESTONE_VP,
+  findBoard,
+  type AwardDef,
+  type BoardId,
+} from './boards';
 import { CREDICOR_REBATE, findCorporation, findPrelude, type PreludeDef } from './catalog';
 import {
   RESOURCES,
@@ -23,6 +34,8 @@ import {
   type PurchaseKind,
   type ResourceKey,
   type ResourceMap,
+  type PlayerScore,
+  type ScoreKey,
 } from './types';
 
 export type PlayerPatch = Partial<
@@ -37,7 +50,23 @@ export type Action =
   | { type: 'lowerGlobal'; param: GlobalKey }
   | { type: 'greenery'; playerId: string }
   | { type: 'heatToTemperature'; playerId: string }
-  | { type: 'pay'; playerId: string; cost: number; payment: Payment; listCost?: number; label?: string }
+  | {
+      type: 'pay';
+      playerId: string;
+      cost: number;
+      payment: Payment;
+      listCost?: number;
+      label?: string;
+      /** Proyecto estándar pagado: su efecto se aplica solo. */
+      projectId?: string;
+    }
+  /** declared: valor que informa el jugador para hitos que la app no puede medir. */
+  | { type: 'claimMilestone'; playerId: string; milestoneId: string; declared?: number }
+  | { type: 'fundAward'; playerId: string; awardId: string }
+  | { type: 'score'; playerId: string; key: ScoreKey; delta: number }
+  | { type: 'finalGreenery'; playerId: string }
+  | { type: 'setAwardValue'; awardId: string; playerId: string; value: number }
+  | { type: 'advancePhase' }
   | { type: 'addDiscount'; playerId: string; discount: Omit<Discount, 'id'> }
   | { type: 'removeDiscount'; playerId: string; discountId: string }
   | { type: 'registerAction'; playerId: string }
@@ -68,6 +97,7 @@ export interface GameSetup {
   corporateEra: boolean;
   venus: boolean;
   prelude: boolean;
+  board: BoardId;
 }
 
 /**
@@ -97,7 +127,23 @@ const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`);
 export const ACTIONS_PER_TURN = 2;
 
 /** Acciones de la app que consumen una acción del turno. */
-const TURN_ACTIONS: ReadonlySet<Action['type']> = new Set(['pay', 'greenery', 'heatToTemperature', 'registerAction']);
+const TURN_ACTIONS: ReadonlySet<Action['type']> = new Set([
+  'pay',
+  'greenery',
+  'heatToTemperature',
+  'registerAction',
+  'claimMilestone',
+  'fundAward',
+]);
+
+const emptyScore = (): PlayerScore => ({
+  greeneries: 0,
+  cities: 0,
+  cityPoints: 0,
+  cardPoints: 0,
+  jovianCards: 0,
+  jovianTags: 0,
+});
 
 /** Cambios que no se guardan en el historial de deshacer. */
 export const isViewOnly = (a: Action) =>
@@ -133,6 +179,7 @@ export function createGame(setup: GameSetup): Game {
     titaniumValue: DEFAULT_TITANIUM_VALUE,
     cardCost: DEFAULT_CARD_COST,
     discounts: [],
+    score: emptyScore(),
   }));
   const now = Date.now();
   const game: Game = {
@@ -144,7 +191,7 @@ export function createGame(setup: GameSetup): Game {
     players,
     activePlayerId: players[0].id,
     globals: { temperature: LIMITS.temperature.min, oxygen: 0, oceans: 0, venus: 0 },
-    options: { corporateEra: setup.corporateEra, venus: setup.venus, prelude: setup.prelude },
+    options: { corporateEra: setup.corporateEra, venus: setup.venus, prelude: setup.prelude, board: setup.board },
     log: [],
     turn: { playerId: players[0].id, actions: 0 },
     passed: [],
@@ -152,6 +199,10 @@ export function createGame(setup: GameSetup): Game {
     turnNotice: null,
     researchPending: false,
     reminder: null,
+    milestones: [],
+    awards: [],
+    phase: 'playing',
+    awardValues: {},
   };
   log(game, `Partida creada con ${players.length} jugador${players.length > 1 ? 'es' : ''}`);
   players.forEach((p, i) => applySetup(game, p, setup.players[i], setup.prelude));
@@ -202,6 +253,8 @@ function applyPrelude(g: Game, p: Player, d: PreludeDef) {
   for (let i = 0; i < (d.temperature ?? 0); i++) raiseTemperature(g, p, notes);
   for (let i = 0; i < (d.oxygen ?? 0); i++) raiseOxygen(g, p, notes);
   for (let i = 0; i < (d.oceans ?? 0); i++) placeOcean(g, p, notes);
+  p.score.greeneries += d.greeneries ?? 0;
+  p.score.cities += d.cities ?? 0;
   log(g, `${p.name}: preludio ${d.name}${notes.length ? ` · ${notes.join(' · ')}` : ''}`);
 }
 
@@ -235,7 +288,16 @@ export function applyAction(game: Game, action: Action): Game {
 }
 
 /** Durante la fase de investigación nadie puede hacer acciones todavía. */
-export const isTurnOf = (g: Game, playerId: string) => !g.researchPending && g.turn?.playerId === playerId;
+export const isTurnOf = (g: Game, playerId: string) =>
+  g.phase === 'playing' && !g.researchPending && g.turn?.playerId === playerId;
+
+/** La partida termina al final de la generación en que se completa la terraformación. */
+export const isLastGeneration = (g: Game) =>
+  isTerraformed(g) || (isSolo(g) && g.generation >= SOLO_GENERATIONS);
+
+/** En solitario se gana si Marte (y Venus, con Venus Next) quedó terraformado. */
+export const soloWon = (g: Game) =>
+  isTerraformed(g) && (!g.options.venus || g.globals.venus >= LIMITS.venus.max);
 
 /** Cuántas cartas puede comprar el jugador en la fase de investigación. */
 export const maxCardsToBuy = (p: Player) =>
@@ -243,6 +305,12 @@ export const maxCardsToBuy = (p: Player) =>
 
 function run(g: Game, a: Action): boolean {
   if (a.type === 'productionPhase') return productionPhase(g);
+  if (a.type === 'advancePhase') return advancePhase(g);
+  if (a.type === 'setAwardValue') {
+    if (g.phase !== 'scoring' || a.value < 0) return false;
+    g.awardValues[a.awardId] = { ...g.awardValues[a.awardId], [a.playerId]: Math.round(a.value) };
+    return true;
+  }
   if (a.type === 'lowerGlobal') return lowerGlobal(g, a.param);
   if (a.type === 'research') return researchPhase(g, a.purchases);
   if (a.type === 'dismissReminder') {
@@ -324,6 +392,7 @@ function run(g: Game, a: Action): boolean {
       if (p.resources.plants < p.greeneryCost) return false;
       p.resources.plants -= p.greeneryCost;
       const notes = [`bosque (−${p.greeneryCost} plantas)`];
+      p.score.greeneries += 1;
       if (!raiseOxygen(g, p, notes)) notes.push('oxígeno al máximo, sin TR');
       log(g, `${p.name}: ${notes.join(' · ')}`);
       return true;
@@ -349,12 +418,59 @@ function run(g: Game, a: Action): boolean {
       const what = a.label ? `${a.label} ` : '';
       const saved = listCost - a.cost;
       const discount = saved > 0 ? ` (lista ${listCost}, −${saved} por descuentos)` : '';
+      const effects: string[] = [];
+      if (a.projectId) applyStandardProject(g, p, a.projectId, effects);
       let rebate = '';
       if (p.corporationId === 'credicor' && listCost >= CREDICOR_REBATE.minCost) {
         p.resources.megacredits += CREDICOR_REBATE.amount;
         rebate = ` · CrediCor +${CREDICOR_REBATE.amount} M€`;
       }
-      log(g, `${p.name}: pagó ${what}${a.cost} M€${discount} con ${describePayment(a.payment)}${rebate}`);
+      const effectText = effects.length ? ` · ${effects.join(' · ')}` : '';
+      log(g, `${p.name}: pagó ${what}${a.cost} M€${discount} con ${describePayment(a.payment)}${rebate}${effectText}`);
+      return true;
+    }
+
+    case 'finalGreenery': {
+      if (g.phase !== 'finalGreenery' || p.resources.plants < p.greeneryCost) return false;
+      p.resources.plants -= p.greeneryCost;
+      p.score.greeneries += 1;
+      const notes = [`bosque final (−${p.greeneryCost} plantas)`];
+      raiseOxygen(g, p, notes);
+      log(g, `${p.name}: ${notes.join(' · ')}`);
+      return true;
+    }
+
+    case 'claimMilestone': {
+      const board = findBoard(g.options.board);
+      const def = board.milestones.find((m) => m.id === a.milestoneId);
+      if (!def || g.milestones.length >= MAX_MILESTONES || g.milestones.some((m) => m.id === def.id)) return false;
+      if (p.resources.megacredits < MILESTONE_COST) return false;
+      const value = def.value ? def.value(p, g) : a.declared;
+      if (value === undefined || value < def.threshold) return false;
+      p.resources.megacredits -= MILESTONE_COST;
+      g.milestones.push({ id: def.id, playerId: p.id });
+      log(g, `${p.name}: reclamó el hito ${def.name} (−${MILESTONE_COST} M€, +${MILESTONE_VP} PV)`);
+      return true;
+    }
+
+    case 'fundAward': {
+      const board = findBoard(g.options.board);
+      const def = board.awards.find((x) => x.id === a.awardId);
+      const cost = AWARD_COSTS[g.awards.length];
+      if (!def || cost === undefined || g.awards.some((x) => x.id === def.id)) return false;
+      if (p.resources.megacredits < cost) return false;
+      p.resources.megacredits -= cost;
+      g.awards.push({ id: def.id, playerId: p.id });
+      log(g, `${p.name}: financió el premio ${def.name} (−${cost} M€)`);
+      return true;
+    }
+
+    case 'score': {
+      const prev = p.score[a.key];
+      const next = Math.max(0, prev + a.delta);
+      if (next === prev) return false;
+      p.score[a.key] = next;
+      logDelta(g, `score:${p.id}:${a.key}`, next - prev, (n) => `${p.name}: ${n > 0 ? '+' : ''}${n} ${SCORE_LABELS[a.key]}`);
       return true;
     }
 
@@ -473,6 +589,7 @@ export function normalizeGame(g: Game): Game {
     p.discounts ??= [];
     p.cardCost ??= DEFAULT_CARD_COST;
     p.corporationId ??= null;
+    p.score = { ...emptyScore(), ...p.score };
   }
   // turn puede ser null a propósito (todos pasaron); solo se completa si falta el campo
   if (g.turn === undefined) g.turn = { playerId: firstPlayer(g).id, actions: 0 };
@@ -482,6 +599,11 @@ export function normalizeGame(g: Game): Game {
   g.researchPending ??= false;
   g.options.prelude ??= false;
   g.reminder ??= null;
+  g.options.board ??= 'tharsis';
+  g.milestones ??= [];
+  g.awards ??= [];
+  g.phase ??= 'playing';
+  g.awardValues ??= {};
   return g;
 }
 
@@ -566,6 +688,8 @@ function lowerGlobal(g: Game, param: GlobalKey): boolean {
 }
 
 function productionPhase(g: Game): boolean {
+  if (g.phase !== 'playing') return false;
+  const ending = isLastGeneration(g);
   for (const p of g.players) {
     const gains = productionPreview(p);
     for (const k of RESOURCES) {
@@ -575,6 +699,15 @@ function productionPhase(g: Game): boolean {
     p.resources.energy = Math.max(0, p.production.energy);
   }
   log(g, `Fin de la generación ${g.generation}: producción aplicada`);
+  if (ending) {
+    g.phase = 'finalGreenery';
+    g.turn = null;
+    g.passed = [];
+    g.turnNotice = null;
+    g.researchPending = false;
+    log(g, 'Fin de la partida: bosques finales y puntuación');
+    return true;
+  }
   g.generation += 1;
   g.activePlayerId = firstPlayer(g).id;
   g.turn = { playerId: g.activePlayerId, actions: 0 };
@@ -601,6 +734,144 @@ function researchPhase(g: Game, purchases: Record<string, number>): boolean {
   g.researchPending = false;
   log(g, `Investigación: ${bought.join(' · ')}`);
   return true;
+}
+
+// ---------- Proyectos estándar y puntos ----------
+
+/** Aplica el efecto de un proyecto estándar ya pagado. */
+function applyStandardProject(g: Game, p: Player, projectId: string, notes: string[]) {
+  switch (projectId) {
+    case 'power-plant':
+      p.production.energy += 1;
+      notes.push('+1 producción de energía');
+      return;
+    case 'asteroid':
+      raiseTemperature(g, p, notes);
+      return;
+    case 'air-scrapping':
+      raiseVenus(g, p, notes);
+      return;
+    case 'aquifer':
+      placeOcean(g, p, notes);
+      return;
+    case 'greenery':
+      p.score.greeneries += 1;
+      notes.push('bosque');
+      raiseOxygen(g, p, notes);
+      return;
+    case 'city':
+      p.score.cities += 1;
+      p.production.megacredits += 1;
+      notes.push('ciudad · +1 producción de M€');
+      return;
+  }
+}
+
+export const SCORE_LABELS: Record<ScoreKey, string> = {
+  greeneries: 'bosques',
+  cities: 'ciudades',
+  cityPoints: 'PV por ciudades',
+  cardPoints: 'PV de cartas',
+  jovianCards: 'cartas que puntúan por jovianos',
+  jovianTags: 'etiquetas jovianas',
+};
+
+export interface ScoreBreakdown {
+  tr: number;
+  milestones: number;
+  greeneries: number;
+  cities: number;
+  cards: number;
+  jovian: number;
+  awards: number;
+  total: number;
+}
+
+/** Puntos de victoria actuales (los premios cuentan desde la puntuación final). */
+export function scoreOf(g: Game, p: Player): ScoreBreakdown {
+  const milestones = g.milestones.filter((m) => m.playerId === p.id).length * MILESTONE_VP;
+  const s = p.score;
+  const breakdown = {
+    tr: p.tr,
+    milestones,
+    greeneries: s.greeneries,
+    cities: s.cityPoints,
+    cards: s.cardPoints,
+    // Cada carta da 1 PV por etiqueta joviana
+    jovian: s.jovianCards * s.jovianTags,
+    awards: awardPoints(g, p.id),
+  };
+  return { ...breakdown, total: Object.values(breakdown).reduce((a, b) => a + b, 0) };
+}
+
+// ---------- Final de la partida ----------
+
+function advancePhase(g: Game): boolean {
+  if (g.phase === 'finalGreenery') {
+    g.phase = 'scoring';
+    log(g, 'Puntuación final');
+    return true;
+  }
+  if (g.phase === 'scoring') {
+    if (awardResults(g).some((r) => !r.complete)) return false;
+    g.phase = 'finished';
+    const [winner] = finalRanking(g);
+    log(g, isSolo(g) ? (soloWon(g) ? 'Partida ganada: Marte terraformado' : 'Partida perdida: Marte sin terraformar') : `Ganó ${winner.p.name} con ${winner.s.total} PV`);
+    return true;
+  }
+  return false;
+}
+
+export interface AwardResult {
+  award: AwardDef;
+  /** Valor de cada jugador (undefined = falta informarlo). */
+  values: Record<string, number | undefined>;
+  complete: boolean;
+  first: string[];
+  second: string[];
+}
+
+/**
+ * Premios financiados con sus ganadores: 5 PV a los primeros (empatados incluidos) y 2 a los
+ * segundos, salvo que haya empate en el primer puesto o la partida sea de 2 jugadores.
+ */
+export function awardResults(g: Game): AwardResult[] {
+  const board = findBoard(g.options.board);
+  return g.awards.flatMap((claim): AwardResult[] => {
+    const award = board.awards.find((a) => a.id === claim.id);
+    if (!award) return [];
+    const values: Record<string, number | undefined> = {};
+    for (const p of g.players) values[p.id] = award.metric ? award.metric(p) : g.awardValues[award.id]?.[p.id];
+    const complete = Object.values(values).every((v) => v !== undefined);
+    if (!complete) return [{ award, values, complete, first: [], second: [] }];
+    const entries = Object.entries(values) as [string, number][];
+    const best = Math.max(...entries.map(([, v]) => v));
+    const first = entries.filter(([, v]) => v === best).map(([id]) => id);
+    let second: string[] = [];
+    if (first.length === 1 && g.players.length > 2) {
+      const rest = entries.filter(([, v]) => v < best);
+      if (rest.length) {
+        const next = Math.max(...rest.map(([, v]) => v));
+        second = rest.filter(([, v]) => v === next).map(([id]) => id);
+      }
+    }
+    return [{ award, values, complete, first, second }];
+  });
+}
+
+function awardPoints(g: Game, playerId: string): number {
+  if (g.phase !== 'scoring' && g.phase !== 'finished') return 0;
+  return awardResults(g).reduce(
+    (sum, r) => sum + (r.first.includes(playerId) ? AWARD_VP.first : r.second.includes(playerId) ? AWARD_VP.second : 0),
+    0,
+  );
+}
+
+/** Jugadores ordenados por PV; el desempate es por M€. */
+export function finalRanking(g: Game): { p: Player; s: ScoreBreakdown }[] {
+  return g.players
+    .map((p) => ({ p, s: scoreOf(g, p) }))
+    .sort((a, b) => b.s.total - a.s.total || b.p.resources.megacredits - a.p.resources.megacredits);
 }
 
 // ---------- Turnos ----------

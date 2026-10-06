@@ -1,5 +1,6 @@
 import { IconArrowLeft } from '@tabler/icons-react';
 import { useState, type FormEvent } from 'react';
+import { BOARDS, type BoardId } from '../game/boards';
 import { PLAYER_COLORS } from '../game/constants';
 import { createGame, type PlayerSetup } from '../game/logic';
 import type { Game } from '../game/types';
@@ -31,6 +32,8 @@ export function NewGame({ onCreate, onCancel }: Props) {
   const [corporateEra, setCorporateEra] = useState(true);
   const [venus, setVenus] = useState(false);
   const [prelude, setPrelude] = useState(false);
+  const [board, setBoard] = useState<BoardId>('tharsis');
+  const selectedBoard = BOARDS.find((b) => b.id === board)!;
 
   const update = (i: number, patch: Partial<PlayerSetup>) =>
     setPlayers((ps) => ps.map((p, j) => (j === i ? { ...p, ...patch } : p)));
@@ -47,7 +50,7 @@ export function NewGame({ onCreate, onCancel }: Props) {
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (hasProblems) return;
-    onCreate(createGame({ name, players, corporateEra, venus, prelude }));
+    onCreate(createGame({ name, players, corporateEra, venus, prelude, board }));
   };
 
   return (
@@ -63,6 +66,27 @@ export function NewGame({ onCreate, onCancel }: Props) {
         <span>Nombre de la partida</span>
         <input value={name} onChange={(e) => setName(e.target.value)} />
       </label>
+
+      <h2 className="section-title">Mapa</h2>
+      <div className="segmented three" role="radiogroup" aria-label="Mapa">
+        {BOARDS.map((b) => (
+          <button
+            key={b.id}
+            type="button"
+            role="radio"
+            aria-checked={board === b.id}
+            className={board === b.id ? 'on' : ''}
+            onClick={() => setBoard(b.id)}
+          >
+            {b.name}
+          </button>
+        ))}
+      </div>
+      <div className="setup-summary">
+        <span>{selectedBoard.description}</span>
+        <small className="muted">Hitos: {selectedBoard.milestones.map((m) => m.name).join(', ')}</small>
+        <small className="muted">Premios: {selectedBoard.awards.map((a) => a.name).join(', ')}</small>
+      </div>
 
       <h2 className="section-title">Opciones</h2>
       <label className="toggle">

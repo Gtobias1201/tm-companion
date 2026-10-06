@@ -36,7 +36,8 @@ export function Home({ games, onNew, onOpen, onDelete }: Props) {
                 <div className="game-name">{g.name}</div>
                 <div className="game-meta">
                   Generación {g.generation}
-                  {isTerraformed(g) && ' · Marte terraformado'} · {new Date(g.updatedAt).toLocaleDateString()}
+                  {g.phase === 'finished' ? ' · Finalizada' : isTerraformed(g) ? ' · Marte terraformado' : ''} ·{' '}
+                  {new Date(g.updatedAt).toLocaleDateString()}
                 </div>
                 <div className="game-players">
                   {g.players.map((p) => (

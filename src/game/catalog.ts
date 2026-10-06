@@ -19,6 +19,8 @@ export interface CorporationDef {
   cardCost?: number;
   /** Beginner Corporation: las cartas iniciales no se pagan. */
   freeInitialCards?: boolean;
+  /** La única corporación que pueden elegir varios jugadores a la vez. */
+  repeatable?: boolean;
   /** Id en DISCOUNT_CARDS: el descuento se carga solo al jugador. */
   discountId?: string;
   /** Efecto que la app no aplica sola, como recordatorio. */
@@ -36,13 +38,16 @@ export interface PreludeDef {
   temperature?: number;
   oxygen?: number;
   oceans?: number;
+  /** Losetas que coloca el preludio (cuentan para puntos e hitos). */
+  greeneries?: number;
+  cities?: number;
   note?: string;
 }
 
 export const CREDICOR_REBATE = { minCost: 20, amount: 4 };
 
 export const CORPORATIONS: CorporationDef[] = [
-  { id: 'beginner', name: 'Beginner Corporation', expansion: 'Base', startingMC: 42, freeInitialCards: true },
+  { id: 'beginner', name: 'Beginner Corporation', expansion: 'Base', startingMC: 42, freeInitialCards: true, repeatable: true },
   { id: 'credicor', name: 'CrediCor', expansion: 'Base', startingMC: 57, note: 'Recibe 4 M€ al pagar algo de costo 20 o más (automático)' },
   { id: 'ecoline', name: 'EcoLine', expansion: 'Base', startingMC: 36, production: { plants: 2 }, stock: { plants: 3 }, greeneryCost: 7 },
   { id: 'helion', name: 'Helion', expansion: 'Base', startingMC: 42, production: { heat: 3 }, note: 'Puede usar calor como M€' },
@@ -93,10 +98,10 @@ export const PRELUDES: PreludeDef[] = [
   { id: 'business-empire', name: 'Business Empire', expansion: 'Prelude', production: { megacredits: 6 }, stock: { megacredits: -6 } },
   { id: 'dome-farming', name: 'Dome Farming', expansion: 'Prelude', production: { megacredits: 2, plants: 1 } },
   { id: 'donation', name: 'Donation', expansion: 'Prelude', stock: { megacredits: 21 } },
-  { id: 'early-settlement', name: 'Early Settlement', expansion: 'Prelude', production: { plants: 1 }, note: 'Colocá una ciudad' },
+  { id: 'early-settlement', name: 'Early Settlement', expansion: 'Prelude', production: { plants: 1 }, cities: 1, note: 'Colocá la ciudad en el tablero' },
   { id: 'eccentric-sponsor', name: 'Eccentric Sponsor', expansion: 'Prelude', note: 'Jugá una carta con 25 M€ de descuento' },
   { id: 'ecology-experts', name: 'Ecology Experts', expansion: 'Prelude', production: { plants: 1 }, note: 'Jugá una carta ignorando requisitos globales' },
-  { id: 'experimental-forest', name: 'Experimental Forest', expansion: 'Prelude', oxygen: 1, note: 'Colocá el bosque y robá 2 cartas de plantas' },
+  { id: 'experimental-forest', name: 'Experimental Forest', expansion: 'Prelude', oxygen: 1, greeneries: 1, note: 'Colocá el bosque y robá 2 cartas de plantas' },
   { id: 'galilean-mining', name: 'Galilean Mining', expansion: 'Prelude', production: { titanium: 2 }, stock: { megacredits: -5 } },
   { id: 'great-aquifer', name: 'Great Aquifer', expansion: 'Prelude', oceans: 2 },
   { id: 'huge-asteroid', name: 'Huge Asteroid', expansion: 'Prelude', temperature: 3, stock: { megacredits: -5 } },
@@ -113,7 +118,7 @@ export const PRELUDES: PreludeDef[] = [
   { id: 'polar-industries', name: 'Polar Industries', expansion: 'Prelude', production: { heat: 2 }, oceans: 1 },
   { id: 'power-generation', name: 'Power Generation', expansion: 'Prelude', production: { energy: 3 } },
   { id: 'research-network', name: 'Research Network', expansion: 'Prelude', production: { megacredits: 1 }, note: 'Robá 3 cartas' },
-  { id: 'self-sufficient-settlement', name: 'Self-Sufficient Settlement', expansion: 'Prelude', production: { megacredits: 2 }, note: 'Colocá una ciudad' },
+  { id: 'self-sufficient-settlement', name: 'Self-Sufficient Settlement', expansion: 'Prelude', production: { megacredits: 2 }, cities: 1, note: 'Colocá la ciudad en el tablero' },
   { id: 'smelting-plant', name: 'Smelting Plant', expansion: 'Prelude', oxygen: 2, stock: { steel: 5 } },
   { id: 'society-support', name: 'Society Support', expansion: 'Prelude', production: { plants: 1, energy: 1, heat: 1, megacredits: -1 } },
   { id: 'supplier', name: 'Supplier', expansion: 'Prelude', production: { energy: 2 }, stock: { steel: 4 } },

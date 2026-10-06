@@ -6,14 +6,16 @@ import { ResourceIcon } from './icons';
 
 interface Props {
   game: Game;
+  /** Última generación: después de esta producción termina la partida. */
+  final?: boolean;
   onConfirm: () => void;
   onClose: () => void;
 }
 
-export function ProductionDialog({ game, onConfirm, onClose }: Props) {
+export function ProductionDialog({ game, final, onConfirm, onClose }: Props) {
   return (
     <Modal
-      title={`Fin de la generación ${game.generation}`}
+      title={final ? `Producción final · generación ${game.generation}` : `Fin de la generación ${game.generation}`}
       onClose={onClose}
       footer={
         <>
@@ -21,7 +23,7 @@ export function ProductionDialog({ game, onConfirm, onClose }: Props) {
             Cancelar
           </button>
           <button className="btn primary grow" onClick={onConfirm}>
-            Aplicar producción
+            {final ? 'Aplicar y terminar la partida' : 'Aplicar producción'}
           </button>
         </>
       }

@@ -10,6 +10,7 @@ export interface PayRequest {
   listCost: number;
   payment: Payment;
   label?: string;
+  projectId?: string;
 }
 
 interface Props {
@@ -81,7 +82,7 @@ export function PaymentDialog({ player, venus, onPay, onClose }: Props) {
 
   const submit = () => {
     if (!payment) return;
-    onPay({ cost, listCost, payment, label: project?.label });
+    onPay({ cost, listCost, payment, label: project?.label, projectId: project?.id });
   };
 
   return (
@@ -258,7 +259,7 @@ export function PaymentDialog({ player, venus, onPay, onClose }: Props) {
             <p className="payment-note">Pagás {overpay} M€ de más (el acero y el titanio no dan vuelto).</p>
           )}
           {kind === 'standard' && (
-            <p className="payment-note">Recordá aplicar el efecto del proyecto (subir parámetro, producción, etc.).</p>
+            <p className="payment-note">El efecto del proyecto se aplica solo al pagar.</p>
           )}
         </div>
       )}

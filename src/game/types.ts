@@ -1,3 +1,5 @@
+import type { BoardId } from './boards';
+
 export const RESOURCES = ['megacredits', 'steel', 'titanium', 'plants', 'energy', 'heat'] as const;
 export type ResourceKey = (typeof RESOURCES)[number];
 export type ResourceMap = Record<ResourceKey, number>;
@@ -22,7 +24,25 @@ export interface Player {
   cardCost: number;
   /** Cartas en juego que abaratan otras cartas (Space Station, Earth Office, ...). */
   discounts: Discount[];
+  score: PlayerScore;
 }
+
+/** Contadores para los puntos de victoria que no salen del TR. */
+export interface PlayerScore {
+  /** Bosques propios: 1 PV cada uno. */
+  greeneries: number;
+  /** Ciudades propias (para hitos como Mayor). */
+  cities: number;
+  /** PV de las ciudades: 1 por cada bosque adyacente. */
+  cityPoints: number;
+  /** PV impresos en cartas y recursos sobre cartas. */
+  cardPoints: number;
+  /** Cartas que dan 1 PV por etiqueta joviana (Io Mining Industries, Ganymede Colony...). */
+  jovianCards: number;
+  /** Etiquetas jovianas en juego, para esas cartas. */
+  jovianTags: number;
+}
+export type ScoreKey = keyof PlayerScore;
 
 /** Etiquetas que pueden tener descuentos o habilitar acero/titanio. */
 export const CARD_TAGS = ['building', 'space', 'earth', 'science', 'power', 'venus'] as const;
@@ -58,6 +78,12 @@ export interface GameOptions {
   corporateEra: boolean;
   venus: boolean;
   prelude: boolean;
+  board: BoardId;
+}
+
+export interface Claim {
+  id: string;
+  playerId: string;
 }
 
 export interface LogEntry {
@@ -83,6 +109,9 @@ export interface TurnNotice {
   reason: 'actions' | 'end' | 'pass';
 }
 
+/** playing → bosques finales → puntuación → terminada. */
+export type GamePhase = 'playing' | 'finalGreenery' | 'scoring' | 'finished';
+
 export interface Game {
   id: string;
   name: string;
@@ -105,4 +134,11 @@ export interface Game {
   researchPending: boolean;
   /** Recordatorio de un bonus que hay que resolver en la mesa (p. ej. robar carta en Venus 8%). */
   reminder: { playerId: string; text: string } | null;
+  /** Hitos reclamados, en orden. */
+  milestones: Claim[];
+  /** Premios financiados, en orden (define su costo). */
+  awards: Claim[];
+  phase: GamePhase;
+  /** Valores informados por los jugadores para premios que la app no puede medir. */
+  awardValues: Record<string, Record<string, number>>;
 }
