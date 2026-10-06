@@ -16,7 +16,25 @@ export interface Player {
   steelValue: number;
   /** M€ que vale cada titanio al pagar cartas espaciales (3; 4 con Phobolog o Advanced Alloys). */
   titaniumValue: number;
+  /** Cartas en juego que abaratan otras cartas (Space Station, Earth Office, ...). */
+  discounts: Discount[];
 }
+
+/** Etiquetas que pueden tener descuentos o habilitar acero/titanio. */
+export const CARD_TAGS = ['building', 'space', 'earth', 'science', 'power', 'venus'] as const;
+export type CardTag = (typeof CARD_TAGS)[number];
+export type DiscountScope = CardTag | 'all';
+
+export interface Discount {
+  id: string;
+  /** Id del catálogo, o null si es un descuento personalizado. */
+  cardId: string | null;
+  name: string;
+  amount: number;
+  scope: DiscountScope;
+}
+
+export type PurchaseKind = 'card' | 'standard';
 
 export interface Payment {
   megacredits: number;

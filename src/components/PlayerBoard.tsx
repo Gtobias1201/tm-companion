@@ -6,6 +6,7 @@ import { ResourceCard } from './ResourceCard';
 import { AmountDialog } from './AmountDialog';
 import { PlayerEditDialog } from './PlayerEditDialog';
 import { PaymentDialog } from './PaymentDialog';
+import { DiscountsPanel } from './DiscountsPanel';
 
 interface Props {
   game: Game;
@@ -65,7 +66,11 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
 
       <button className="btn pay-btn block" onClick={() => setPaying(true)}>
         💳 Pagar carta o proyecto
-        <small>M€ · acero · titanio</small>
+        <small>
+          M€ · acero · titanio
+          {player.discounts.length > 0 &&
+            ` · ${player.discounts.length} descuento${player.discounts.length > 1 ? 's' : ''}`}
+        </small>
       </button>
 
       <div className="conversions">
@@ -89,6 +94,8 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
         </button>
       </div>
 
+      <DiscountsPanel player={player} dispatch={dispatch} />
+
       {amountKey && (
         <AmountDialog
           resource={amountKey}
@@ -104,9 +111,10 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
       {paying && (
         <PaymentDialog
           player={player}
+          venus={game.options.venus}
           onClose={() => setPaying(false)}
-          onPay={(cost, payment) => {
-            dispatch({ type: 'pay', playerId: pid, cost, payment });
+          onPay={(request) => {
+            dispatch({ type: 'pay', playerId: pid, ...request });
             setPaying(false);
           }}
         />

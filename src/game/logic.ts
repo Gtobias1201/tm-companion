@@ -10,10 +10,13 @@ import {
 } from './constants';
 import {
   RESOURCES,
+  type CardTag,
+  type Discount,
   type Game,
   type GlobalKey,
   type Payment,
   type Player,
+  type PurchaseKind,
   type ResourceKey,
   type ResourceMap,
 } from './types';
@@ -30,7 +33,9 @@ export type Action =
   | { type: 'lowerGlobal'; param: GlobalKey }
   | { type: 'greenery'; playerId: string }
   | { type: 'heatToTemperature'; playerId: string }
-  | { type: 'pay'; playerId: string; cost: number; payment: Payment }
+  | { type: 'pay'; playerId: string; cost: number; payment: Payment; listCost?: number; label?: string }
+  | { type: 'addDiscount'; playerId: string; discount: Omit<Discount, 'id'> }
+  | { type: 'removeDiscount'; playerId: string; discountId: string }
   | { type: 'productionPhase' }
   | { type: 'setActive'; playerId: string }
   | { type: 'updatePlayer'; playerId: string; patch: PlayerPatch };
@@ -87,6 +92,7 @@ export function createGame(setup: GameSetup): Game {
     greeneryCost: DEFAULT_GREENERY_COST,
     steelValue: DEFAULT_STEEL_VALUE,
     titaniumValue: DEFAULT_TITANIUM_VALUE,
+    discounts: [],
   }));
   const now = Date.now();
   const game: Game = {
@@ -193,11 +199,32 @@ function run(g: Game, a: Action): boolean {
 
     case 'pay': {
       const { megacredits, steel, titanium } = a.payment;
-      if (a.cost <= 0 || !canAfford(p, a.payment) || paymentValue(p, a.payment) < a.cost) return false;
+      const listCost = a.listCost ?? a.cost;
+      if (listCost <= 0 || a.cost < 0 || !canAfford(p, a.payment) || paymentValue(p, a.payment) < a.cost) return false;
       p.resources.megacredits -= megacredits;
       p.resources.steel -= steel;
       p.resources.titanium -= titanium;
-      log(g, `${p.name}: pagó ${a.cost} M€ con ${describePayment(a.payment)}`);
+      const what = a.label ? `${a.label} ` : '';
+      const saved = listCost - a.cost;
+      const discount = saved > 0 ? ` (lista ${listCost}, −${saved} por descuentos)` : '';
+      log(g, `${p.name}: pagó ${what}${a.cost} M€${discount} con ${describePayment(a.payment)}`);
+      return true;
+    }
+
+    case 'addDiscount': {
+      const { cardId } = a.discount;
+      if (cardId && p.discounts.some((d) => d.cardId === cardId)) return false;
+      const amount = Math.max(1, Math.round(a.discount.amount));
+      p.discounts.push({ ...a.discount, amount, id: uid() });
+      log(g, `${p.name}: agregó descuento ${a.discount.name} (−${amount})`);
+      return true;
+    }
+
+    case 'removeDiscount': {
+      const d = p.discounts.find((x) => x.id === a.discountId);
+      if (!d) return false;
+      p.discounts = p.discounts.filter((x) => x.id !== a.discountId);
+      log(g, `${p.name}: quitó descuento ${d.name}`);
       return true;
     }
 
@@ -246,7 +273,7 @@ export function paymentWith(p: Player, cost: number, steel: number, titanium: nu
  * Devuelve null si el jugador no puede pagar.
  */
 export function bestPayment(p: Player, cost: number, rules: PaymentRules): Payment | null {
-  if (cost <= 0) return null;
+  if (cost <= 0) return { megacredits: 0, steel: 0, titanium: 0 };
   const maxSteel = rules.steel ? Math.min(p.resources.steel, Math.ceil(cost / p.steelValue)) : 0;
   const maxTitanium = rules.titanium ? Math.min(p.resources.titanium, Math.ceil(cost / p.titaniumValue)) : 0;
 
@@ -279,11 +306,23 @@ export function describePayment(pay: Payment): string {
   return parts.join(' + ');
 }
 
+/**
+ * Descuentos que aplican a una compra. Cada efecto descuenta una vez por carta,
+ * aunque la carta tenga varias etiquetas del mismo tipo. En proyectos estándar
+ * solo aplican descuentos por etiqueta (p. ej. Thorgate en la planta de energía).
+ */
+export function applicableDiscounts(p: Player, kind: PurchaseKind, tags: CardTag[]): Discount[] {
+  return p.discounts.filter((d) =>
+    d.scope === 'all' ? kind === 'card' : tags.includes(d.scope),
+  );
+}
+
 /** Completa campos agregados en versiones nuevas para partidas guardadas antes. */
 export function normalizeGame(g: Game): Game {
   for (const p of g.players) {
     p.steelValue ??= DEFAULT_STEEL_VALUE;
     p.titaniumValue ??= DEFAULT_TITANIUM_VALUE;
+    p.discounts ??= [];
   }
   return g;
 }

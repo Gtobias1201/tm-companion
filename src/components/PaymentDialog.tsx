@@ -1,46 +1,70 @@
 import { useState, type CSSProperties } from 'react';
-import { RESOURCE_INFO } from '../game/constants';
-import { bestPayment, canAfford, paymentValue, paymentWith } from '../game/logic';
-import type { Payment, Player } from '../game/types';
+import { RESOURCE_INFO, STANDARD_PROJECTS, TAG_INFO, scopeLabel } from '../game/constants';
+import { applicableDiscounts, bestPayment, canAfford, paymentValue, paymentWith } from '../game/logic';
+import { CARD_TAGS, type CardTag, type Payment, type Player, type PurchaseKind } from '../game/types';
 import { Modal } from './Modal';
+
+export interface PayRequest {
+  cost: number;
+  listCost: number;
+  payment: Payment;
+  label?: string;
+}
 
 interface Props {
   player: Player;
-  onPay: (cost: number, payment: Payment) => void;
+  venus: boolean;
+  onPay: (request: PayRequest) => void;
   onClose: () => void;
 }
 
 const QUICK_COSTS = [3, 5, 10, 15, 20, 25];
 
-export function PaymentDialog({ player, onPay, onClose }: Props) {
+export function PaymentDialog({ player, venus, onPay, onClose }: Props) {
+  const [kind, setKind] = useState<PurchaseKind>('card');
   const [costText, setCostText] = useState('');
-  const [building, setBuilding] = useState(false);
-  const [space, setSpace] = useState(false);
+  const [tags, setTags] = useState<CardTag[]>([]);
+  const [projectId, setProjectId] = useState<string | null>(null);
+  /** Descuentos que el jugador desmarcó para esta compra. */
+  const [skipped, setSkipped] = useState<string[]>([]);
   /** Ajuste manual de acero/titanio; null = usar la recomendación. */
   const [override, setOverride] = useState<{ steel: number; titanium: number } | null>(null);
 
-  const cost = Math.max(0, parseInt(costText, 10) || 0);
-  const rules = { steel: building, titanium: space };
-  const best = bestPayment(player, cost, rules);
-  const payment: Payment | null = override
-    ? paymentWith(player, cost, override.steel, override.titanium)
-    : best;
+  const projects = STANDARD_PROJECTS.filter((sp) => !sp.venus || venus);
+  const project = kind === 'standard' ? projects.find((sp) => sp.id === projectId) : undefined;
 
-  const affordable = payment !== null && cost > 0 && canAfford(player, payment);
+  const listCost = kind === 'card' ? Math.max(0, parseInt(costText, 10) || 0) : (project?.cost ?? 0);
+  const purchaseTags = kind === 'card' ? tags : (project?.tags ?? []);
+  const discounts = applicableDiscounts(player, kind, purchaseTags);
+  const activeDiscount = discounts.filter((d) => !skipped.includes(d.id)).reduce((sum, d) => sum + d.amount, 0);
+  const cost = Math.max(0, listCost - activeDiscount);
+
+  // Acero y titanio solo sirven para cartas con esas etiquetas, nunca en proyectos estándar
+  const allowSteel = kind === 'card' && tags.includes('building');
+  const allowTitanium = kind === 'card' && tags.includes('space');
+  const best = bestPayment(player, cost, { steel: allowSteel, titanium: allowTitanium });
+  const payment: Payment | null = override ? paymentWith(player, cost, override.steel, override.titanium) : best;
+
+  const affordable = listCost > 0 && payment !== null && canAfford(player, payment);
   const overpay = payment ? paymentValue(player, payment) - cost : 0;
-  const isBest =
-    !!payment && !!best && payment.steel === best.steel && payment.titanium === best.titanium;
+  const isBest = !!payment && !!best && payment.steel === best.steel && payment.titanium === best.titanium;
 
-  // Lo máximo que el jugador podría aportar con sus recursos para esta carta
   const maxValue =
     player.resources.megacredits +
-    (building ? player.resources.steel * player.steelValue : 0) +
-    (space ? player.resources.titanium * player.titaniumValue : 0);
+    (allowSteel ? player.resources.steel * player.steelValue : 0) +
+    (allowTitanium ? player.resources.titanium * player.titaniumValue : 0);
 
+  /** Cualquier cambio en la compra vuelve a la recomendación automática. */
   const resetTo = (fn: () => void) => {
     fn();
     setOverride(null);
   };
+
+  const toggleTag = (t: CardTag) =>
+    resetTo(() => setTags((ts) => (ts.includes(t) ? ts.filter((x) => x !== t) : [...ts, t])));
+
+  const toggleDiscount = (id: string) =>
+    resetTo(() => setSkipped((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id])));
 
   const adjust = (key: 'steel' | 'titanium', delta: number) => {
     const base = override ?? { steel: payment?.steel ?? 0, titanium: payment?.titanium ?? 0 };
@@ -50,9 +74,14 @@ export function PaymentDialog({ player, onPay, onClose }: Props) {
   };
 
   const rows: { key: 'steel' | 'titanium'; enabled: boolean; unit: number }[] = [
-    { key: 'steel', enabled: building, unit: player.steelValue },
-    { key: 'titanium', enabled: space, unit: player.titaniumValue },
+    { key: 'steel', enabled: allowSteel, unit: player.steelValue },
+    { key: 'titanium', enabled: allowTitanium, unit: player.titaniumValue },
   ];
+
+  const submit = () => {
+    if (!payment) return;
+    onPay({ cost, listCost, payment, label: project?.label });
+  };
 
   return (
     <Modal
@@ -63,58 +92,105 @@ export function PaymentDialog({ player, onPay, onClose }: Props) {
           <button className="btn ghost" onClick={onClose}>
             Cancelar
           </button>
-          <button
-            className="btn primary grow"
-            disabled={!affordable}
-            onClick={() => payment && onPay(cost, payment)}
-          >
-            {cost > 0 ? `Pagar ${cost} M€` : 'Pagar'}
+          <button className="btn primary grow" disabled={!affordable} onClick={submit}>
+            {listCost > 0 ? (cost > 0 ? `Pagar ${cost} M€` : 'Jugar gratis') : 'Pagar'}
           </button>
         </>
       }
     >
-      <label className="field">
-        <span>Costo de la carta o proyecto (M€)</span>
-        <input
-          type="number"
-          inputMode="numeric"
-          min={0}
-          autoFocus
-          placeholder="0"
-          value={costText}
-          onChange={(e) => resetTo(() => setCostText(e.target.value))}
-        />
-      </label>
-      <div className="quick-costs">
-        {QUICK_COSTS.map((n) => (
-          <button key={n} className="btn small ghost" onClick={() => resetTo(() => setCostText(String(n)))}>
-            {n}
+      <div className="segmented" role="tablist">
+        {(['card', 'standard'] as const).map((k) => (
+          <button
+            key={k}
+            role="tab"
+            aria-selected={kind === k}
+            className={kind === k ? 'on' : ''}
+            onClick={() => resetTo(() => { setKind(k); setSkipped([]); })}
+          >
+            {k === 'card' ? 'Carta' : 'Proyecto estándar'}
           </button>
         ))}
       </div>
 
-      <div className="tag-toggles" role="group" aria-label="Etiquetas de la carta">
-        <button
-          className={`tag-toggle ${building ? 'on' : ''}`}
-          aria-pressed={building}
-          style={{ '--t-color': RESOURCE_INFO.steel.color } as CSSProperties}
-          onClick={() => resetTo(() => setBuilding((b) => !b))}
-        >
-          🏗 Edificio
-          <small>acero = {player.steelValue} M€</small>
-        </button>
-        <button
-          className={`tag-toggle ${space ? 'on' : ''}`}
-          aria-pressed={space}
-          style={{ '--t-color': RESOURCE_INFO.titanium.color } as CSSProperties}
-          onClick={() => resetTo(() => setSpace((s) => !s))}
-        >
-          🚀 Espacio
-          <small>titanio = {player.titaniumValue} M€</small>
-        </button>
-      </div>
+      {kind === 'card' ? (
+        <>
+          <label className="field">
+            <span>Costo impreso en la carta (M€)</span>
+            <input
+              type="number"
+              inputMode="numeric"
+              min={0}
+              autoFocus
+              placeholder="0"
+              value={costText}
+              onChange={(e) => resetTo(() => setCostText(e.target.value))}
+            />
+          </label>
+          <div className="quick-costs">
+            {QUICK_COSTS.map((n) => (
+              <button key={n} className="btn small ghost" onClick={() => resetTo(() => setCostText(String(n)))}>
+                {n}
+              </button>
+            ))}
+          </div>
 
-      {cost > 0 && (
+          <div className="field">
+            <span>Etiquetas de la carta</span>
+            <div className="tag-toggles" role="group" aria-label="Etiquetas de la carta">
+              {CARD_TAGS.filter((t) => t !== 'venus' || venus || player.discounts.some((d) => d.scope === 'venus')).map((t) => (
+                <button
+                  key={t}
+                  className={`tag-toggle ${tags.includes(t) ? 'on' : ''}`}
+                  aria-pressed={tags.includes(t)}
+                  style={{ '--t-color': TAG_INFO[t].color } as CSSProperties}
+                  onClick={() => toggleTag(t)}
+                >
+                  <span aria-hidden>{TAG_INFO[t].icon}</span> {TAG_INFO[t].label}
+                  {t === 'building' && <small>acero = {player.steelValue}</small>}
+                  {t === 'space' && <small>titanio = {player.titaniumValue}</small>}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : (
+        <div className="project-list" role="radiogroup" aria-label="Proyecto estándar">
+          {projects.map((sp) => (
+            <button
+              key={sp.id}
+              role="radio"
+              aria-checked={projectId === sp.id}
+              className={`project-option ${projectId === sp.id ? 'on' : ''}`}
+              onClick={() => resetTo(() => { setProjectId(sp.id); setSkipped([]); })}
+            >
+              <span>{sp.label}</span>
+              <strong>{sp.cost} M€</strong>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {discounts.length > 0 && listCost > 0 && (
+        <div className="applied-discounts">
+          {discounts.map((d) => (
+            <label key={d.id} className="applied-discount">
+              <input type="checkbox" checked={!skipped.includes(d.id)} onChange={() => toggleDiscount(d.id)} />
+              <span className="grow">
+                {d.name}
+                <small className="muted"> · {scopeLabel(d.scope)}</small>
+              </span>
+              <strong>−{d.amount}</strong>
+            </label>
+          ))}
+          <div className="discount-total">
+            <span>
+              Precio: <s className="muted">{listCost}</s> → <strong>{cost} M€</strong>
+            </span>
+          </div>
+        </div>
+      )}
+
+      {listCost > 0 && (
         <div className="payment-plan">
           <div className="payment-plan-head">
             <span>{isBest ? 'Pago recomendado' : 'Pago manual'}</span>
@@ -178,6 +254,9 @@ export function PaymentDialog({ player, onPay, onClose }: Props) {
           )}
           {affordable && overpay > 0 && (
             <p className="payment-note">Pagás {overpay} M€ de más (el acero y el titanio no dan vuelto).</p>
+          )}
+          {kind === 'standard' && (
+            <p className="payment-note">Recordá aplicar el efecto del proyecto (subir parámetro, producción, etc.).</p>
           )}
         </div>
       )}

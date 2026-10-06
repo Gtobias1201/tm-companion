@@ -387,3 +387,73 @@ h2 { font-size: 1.05rem; }
 }
 .payment-warn { color: var(--danger); font-size: 0.85rem; font-weight: 600; }
 .payment-note { color: var(--muted); font-size: 0.85rem; }
+
+/* ---------- Descuentos ---------- */
+select {
+  font: inherit;
+  color: var(--text);
+  min-height: var(--tap);
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  padding: 0 10px;
+  width: 100%;
+}
+select:focus { outline: 2px solid var(--accent); outline-offset: 0; }
+option, optgroup { background: var(--panel); color: var(--text); }
+
+.discounts {
+  border-top: 1px dashed var(--border);
+  padding-top: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.discounts-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.discounts-head h3 { margin: 0; font-size: 1rem; }
+.discount-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.discount-chip {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--bg-2); border-radius: 10px; padding: 6px 6px 6px 10px;
+}
+.discount-amount { font-weight: 800; color: #7ccf6a; min-width: 2.5ch; font-variant-numeric: tabular-nums; }
+.discount-text { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.discount-text strong { font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.discount-text small { font-size: 0.75rem; }
+.icon-btn.mini { width: 32px; height: 32px; font-size: 0.85rem; }
+.custom-discount {
+  background: var(--bg-2); border-radius: 12px; padding: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.custom-discount .field input, .custom-discount select { background: var(--panel); }
+
+.segmented {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px;
+  background: var(--bg-2); border-radius: 12px; padding: 4px;
+}
+.segmented button {
+  min-height: 38px; border: none; border-radius: 9px; background: transparent;
+  font-weight: 600; color: var(--muted); cursor: pointer;
+}
+.segmented button.on { background: var(--panel-2); color: var(--text); }
+
+.tag-toggles { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.tag-toggles .tag-toggle { min-height: 50px; font-size: 0.85rem; padding: 4px; }
+
+.project-list { display: flex; flex-direction: column; gap: 6px; }
+.project-option {
+  display: flex; justify-content: space-between; align-items: center;
+  min-height: var(--tap); padding: 0 14px; border-radius: 10px; cursor: pointer;
+  border: 2px solid var(--border); background: var(--bg-2);
+}
+.project-option.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 18%, var(--bg-2)); }
+
+.applied-discounts {
+  background: color-mix(in srgb, #7ccf6a 10%, var(--bg-2));
+  border: 1px solid color-mix(in srgb, #7ccf6a 35%, var(--border));
+  border-radius: 12px; padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.applied-discount { display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 0.9rem; }
+.applied-discount input { width: 20px; height: 20px; accent-color: #7ccf6a; flex-shrink: 0; }
+.applied-discount strong { color: #7ccf6a; }
+.discount-total { border-top: 1px dashed var(--border); padding-top: 8px; text-align: right; }
+.discount-total strong { font-size: 1.1rem; }
