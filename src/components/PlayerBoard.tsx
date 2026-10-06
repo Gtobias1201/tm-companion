@@ -1,5 +1,6 @@
 import { IconCreditCard, IconPencil, IconTemperature, IconTrees } from '@tabler/icons-react';
 import { useState, type CSSProperties } from 'react';
+import { findCorporation } from '../game/catalog';
 import { HEAT_PER_TEMPERATURE, LIMITS, RESOURCE_INFO, colorHex } from '../game/constants';
 import { isTurnOf, productionMin, type Action } from '../game/logic';
 import { RESOURCES, type Game, type Player, type ResourceKey } from '../game/types';
@@ -22,6 +23,7 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
   const [paying, setPaying] = useState(false);
   const temperatureMaxed = game.globals.temperature >= LIMITS.temperature.max;
   const pid = player.id;
+  const corpNote = findCorporation(player.corporationId)?.note;
   // Pagar, bosque y temperatura son acciones: solo en el turno del jugador
   const canAct = isTurnOf(game, pid);
 
@@ -31,6 +33,7 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
         <div>
           <h2>{player.name}</h2>
           {player.corporation && <div className="muted">{player.corporation}</div>}
+          {corpNote && <div className="corp-note">{corpNote}</div>}
         </div>
         <button className="icon-btn" onClick={() => setEditing(true)} aria-label="Editar jugador">
           <IconPencil size={18} />

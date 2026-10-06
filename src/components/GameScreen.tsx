@@ -1,4 +1,12 @@
-import { IconArrowBackUp, IconArrowLeft, IconChevronRight, IconHistory, IconPlanet, IconX } from '@tabler/icons-react';
+import {
+  IconArrowBackUp,
+  IconArrowLeft,
+  IconCards,
+  IconChevronRight,
+  IconHistory,
+  IconPlanet,
+  IconX,
+} from '@tabler/icons-react';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { SOLO_GENERATIONS, colorHex } from '../game/constants';
 import { ACTIONS_PER_TURN, firstPlayer, isSolo, isTerraformed, type Action } from '../game/logic';
@@ -63,6 +71,15 @@ export function GameScreen({ game, canUndo, dispatch, onUndo, onExit }: Props) {
         <div className="banner warn">Última generación del modo solitario.</div>
       )}
 
+      {game.reminder && (
+        <div className="reminder" role="alert">
+          <IconCards size={22} aria-hidden />
+          <span className="grow">{game.reminder.text}</span>
+          <button className="btn small" onClick={() => dispatch({ type: 'dismissReminder' })}>
+            Listo
+          </button>
+        </div>
+      )}
       {notice && noticePlayer && (
         <div className="notice" role="status">
           <span className="grow">

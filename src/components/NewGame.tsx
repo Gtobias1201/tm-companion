@@ -1,9 +1,9 @@
-import { IconArrowLeft, IconX } from '@tabler/icons-react';
+import { IconArrowLeft } from '@tabler/icons-react';
 import { useState, type FormEvent } from 'react';
 import { PLAYER_COLORS } from '../game/constants';
 import { createGame, type PlayerSetup } from '../game/logic';
 import type { Game } from '../game/types';
-import { ColorPicker } from './ColorPicker';
+import { PlayerSetupCard, setupProblems } from './PlayerSetupCard';
 
 interface Props {
   onCreate: (game: Game) => void;
@@ -15,14 +15,22 @@ const MAX_PLAYERS = 5;
 const defaultName = () =>
   `Partida ${new Date().toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}`;
 
+const newPlayer = (n: number, color: string): PlayerSetup => ({
+  name: `Jugador ${n}`,
+  color,
+  corporationId: null,
+  corporation: '',
+  startingMC: 0,
+  initialCards: 0,
+  preludes: [],
+});
+
 export function NewGame({ onCreate, onCancel }: Props) {
   const [name, setName] = useState(defaultName);
-  const [players, setPlayers] = useState<PlayerSetup[]>([
-    { name: 'Jugador 1', color: 'red', corporation: '', startingMC: 0 },
-    { name: 'Jugador 2', color: 'green', corporation: '', startingMC: 0 },
-  ]);
+  const [players, setPlayers] = useState<PlayerSetup[]>([newPlayer(1, 'red'), newPlayer(2, 'green')]);
   const [corporateEra, setCorporateEra] = useState(true);
   const [venus, setVenus] = useState(false);
+  const [prelude, setPrelude] = useState(false);
 
   const update = (i: number, patch: Partial<PlayerSetup>) =>
     setPlayers((ps) => ps.map((p, j) => (j === i ? { ...p, ...patch } : p)));
@@ -31,12 +39,15 @@ export function NewGame({ onCreate, onCancel }: Props) {
     setPlayers((ps) => {
       const used = new Set(ps.map((p) => p.color));
       const color = PLAYER_COLORS.find((c) => !used.has(c.id))?.id ?? 'red';
-      return [...ps, { name: `Jugador ${ps.length + 1}`, color, corporation: '', startingMC: 0 }];
+      return [...ps, newPlayer(ps.length + 1, color)];
     });
+
+  const hasProblems = players.some((p) => setupProblems(p, prelude).length > 0);
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    onCreate(createGame({ name, players, corporateEra, venus }));
+    if (hasProblems) return;
+    onCreate(createGame({ name, players, corporateEra, venus, prelude }));
   };
 
   return (
@@ -53,59 +64,6 @@ export function NewGame({ onCreate, onCancel }: Props) {
         <input value={name} onChange={(e) => setName(e.target.value)} />
       </label>
 
-      <h2 className="section-title">
-        Jugadores <span className="muted">({players.length}/{MAX_PLAYERS})</span>
-      </h2>
-
-      {players.map((p, i) => (
-        <fieldset key={i} className="player-setup">
-          <div className="row">
-            <label className="field grow">
-              <span>Nombre</span>
-              <input value={p.name} onChange={(e) => update(i, { name: e.target.value })} />
-            </label>
-            {players.length > 1 && (
-              <button
-                type="button"
-                className="icon-btn danger"
-                aria-label={`Quitar ${p.name}`}
-                onClick={() => setPlayers((ps) => ps.filter((_, j) => j !== i))}
-              >
-                <IconX size={18} />
-              </button>
-            )}
-          </div>
-          <ColorPicker value={p.color} onChange={(color) => update(i, { color })} />
-          <div className="row">
-            <label className="field grow">
-              <span>Corporación</span>
-              <input
-                placeholder="Opcional"
-                value={p.corporation}
-                onChange={(e) => update(i, { corporation: e.target.value })}
-              />
-            </label>
-            <label className="field narrow">
-              <span>M€ iniciales</span>
-              <input
-                type="number"
-                inputMode="numeric"
-                min={0}
-                value={p.startingMC || ''}
-                placeholder="0"
-                onChange={(e) => update(i, { startingMC: Number(e.target.value) || 0 })}
-              />
-            </label>
-          </div>
-        </fieldset>
-      ))}
-
-      {players.length < MAX_PLAYERS && (
-        <button type="button" className="btn ghost block" onClick={addPlayer}>
-          + Agregar jugador
-        </button>
-      )}
-
       <h2 className="section-title">Opciones</h2>
       <label className="toggle">
         <input type="checkbox" checked={corporateEra} onChange={(e) => setCorporateEra(e.target.checked)} />
@@ -115,19 +73,55 @@ export function NewGame({ onCreate, onCancel }: Props) {
         </span>
       </label>
       <label className="toggle">
+        <input type="checkbox" checked={prelude} onChange={(e) => setPrelude(e.target.checked)} />
+        <span>
+          <strong>Prelude</strong>
+          <small>Cada jugador elige 2 preludios y se aplican al empezar.</small>
+        </span>
+      </label>
+      <label className="toggle">
         <input type="checkbox" checked={venus} onChange={(e) => setVenus(e.target.checked)} />
         <span>
           <strong>Venus Next</strong>
           <small>Agrega el medidor de Venus.</small>
         </span>
       </label>
+
+      <h2 className="section-title">
+        Jugadores <span className="muted">({players.length}/{MAX_PLAYERS})</span>
+      </h2>
+
+      {players.map((p, i) => {
+        const others = players.filter((_, j) => j !== i);
+        return (
+          <PlayerSetupCard
+            key={i}
+            setup={p}
+            index={i}
+            withPreludes={prelude}
+            takenCorporations={new Set(others.map((o) => o.corporationId).filter((id): id is string => !!id))}
+            takenPreludes={new Set(others.flatMap((o) => o.preludes).filter(Boolean))}
+            canRemove={players.length > 1}
+            onChange={(patch) => update(i, patch)}
+            onRemove={() => setPlayers((ps) => ps.filter((_, j) => j !== i))}
+          />
+        );
+      })}
+
+      {players.length < MAX_PLAYERS && (
+        <button type="button" className="btn ghost block" onClick={addPlayer}>
+          + Agregar jugador
+        </button>
+      )}
+
       {players.length === 1 && (
         <p className="note">Modo solitario: empezás con 14 TR y tenés 14 generaciones para terraformar Marte.</p>
       )}
 
-      <button type="submit" className="btn primary block">
+      <button type="submit" className="btn primary block" disabled={hasProblems}>
         Empezar partida
       </button>
+      {hasProblems && <p className="note">Revisá los avisos en rojo de cada jugador para poder empezar.</p>}
     </form>
   );
 }

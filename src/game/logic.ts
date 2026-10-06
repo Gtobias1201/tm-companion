@@ -3,6 +3,7 @@ import {
   DEFAULT_GREENERY_COST,
   DEFAULT_STEEL_VALUE,
   DEFAULT_TITANIUM_VALUE,
+  DISCOUNT_CARDS,
   GLOBAL_INFO,
   HEAT_PER_TEMPERATURE,
   LIMITS,
@@ -10,6 +11,7 @@ import {
   RESOURCE_INFO,
   formatTemperature,
 } from './constants';
+import { CREDICOR_REBATE, findCorporation, findPrelude, type PreludeDef } from './catalog';
 import {
   RESOURCES,
   type CardTag,
@@ -42,6 +44,7 @@ export type Action =
   | { type: 'endTurn'; playerId: string }
   | { type: 'pass'; playerId: string }
   | { type: 'dismissNotice' }
+  | { type: 'dismissReminder' }
   | { type: 'research'; purchases: Record<string, number> }
   | { type: 'productionPhase' }
   | { type: 'setActive'; playerId: string }
@@ -50,8 +53,13 @@ export type Action =
 export interface PlayerSetup {
   name: string;
   color: string;
+  /** Corporación del catálogo; null = cargar nombre y M€ a mano. */
+  corporationId: string | null;
   corporation: string;
   startingMC: number;
+  /** Cartas que se queda del reparto inicial (se pagan con los M€ de la corporación). */
+  initialCards: number;
+  preludes: string[];
 }
 
 export interface GameSetup {
@@ -59,6 +67,20 @@ export interface GameSetup {
   players: PlayerSetup[];
   corporateEra: boolean;
   venus: boolean;
+  prelude: boolean;
+}
+
+/**
+ * M€ del jugador en cada paso del armado: después de comprar las cartas iniciales
+ * (no puede quedar negativo) y después de pagar los preludios.
+ */
+export function setupBalance(s: PlayerSetup): { afterCards: number; final: number; cardPrice: number } {
+  const corp = findCorporation(s.corporationId);
+  const start = corp ? corp.startingMC + (corp.stock?.megacredits ?? 0) : Math.max(0, s.startingMC || 0);
+  const cardPrice = corp?.freeInitialCards ? 0 : (corp?.cardCost ?? DEFAULT_CARD_COST);
+  const afterCards = start - s.initialCards * cardPrice;
+  const preludeMC = s.preludes.reduce((sum, id) => sum + (findPrelude(id)?.stock?.megacredits ?? 0), 0);
+  return { afterCards, final: afterCards + preludeMC, cardPrice };
 }
 
 export function uid(): string {
@@ -78,7 +100,8 @@ export const ACTIONS_PER_TURN = 2;
 const TURN_ACTIONS: ReadonlySet<Action['type']> = new Set(['pay', 'greenery', 'heatToTemperature', 'registerAction']);
 
 /** Cambios que no se guardan en el historial de deshacer. */
-export const isViewOnly = (a: Action) => a.type === 'setActive' || a.type === 'dismissNotice';
+export const isViewOnly = (a: Action) =>
+  a.type === 'setActive' || a.type === 'dismissNotice' || a.type === 'dismissReminder';
 
 export const productionMin = (key: ResourceKey) => (key === 'megacredits' ? -5 : 0);
 
@@ -101,6 +124,7 @@ export function createGame(setup: GameSetup): Game {
     name: s.name.trim() || `Jugador ${i + 1}`,
     color: s.color,
     corporation: s.corporation.trim(),
+    corporationId: null,
     tr: solo ? 14 : 20,
     resources: { ...filled(0), megacredits: Math.max(0, s.startingMC || 0) },
     production: filled(baseProduction),
@@ -120,16 +144,72 @@ export function createGame(setup: GameSetup): Game {
     players,
     activePlayerId: players[0].id,
     globals: { temperature: LIMITS.temperature.min, oxygen: 0, oceans: 0, venus: 0 },
-    options: { corporateEra: setup.corporateEra, venus: setup.venus },
+    options: { corporateEra: setup.corporateEra, venus: setup.venus, prelude: setup.prelude },
     log: [],
     turn: { playerId: players[0].id, actions: 0 },
     passed: [],
     actionsThisGen: {},
     turnNotice: null,
     researchPending: false,
+    reminder: null,
   };
   log(game, `Partida creada con ${players.length} jugador${players.length > 1 ? 'es' : ''}`);
+  players.forEach((p, i) => applySetup(game, p, setup.players[i], setup.prelude));
   return game;
+}
+
+/** Corporación → cartas iniciales → preludios, en el orden del juego. */
+function applySetup(g: Game, p: Player, s: PlayerSetup, withPreludes: boolean) {
+  const corp = findCorporation(s.corporationId);
+  if (corp) {
+    p.corporationId = corp.id;
+    p.corporation = corp.name;
+    p.resources.megacredits = corp.startingMC;
+    addAmounts(p, 'resources', corp.stock);
+    addAmounts(p, 'production', corp.production);
+    if (corp.greeneryCost) p.greeneryCost = corp.greeneryCost;
+    if (corp.titaniumValue) p.titaniumValue = corp.titaniumValue;
+    if (corp.cardCost !== undefined) p.cardCost = corp.cardCost;
+    const discount = DISCOUNT_CARDS.find((d) => d.id === corp.discountId);
+    if (discount) {
+      p.discounts.push({ id: uid(), cardId: discount.id, name: discount.name, amount: discount.amount, scope: discount.scope });
+    }
+    log(g, `${p.name}: corporación ${corp.name} (${corp.startingMC} M€)`);
+  }
+
+  const { cardPrice } = setupBalance(s);
+  if (s.initialCards > 0) {
+    const cost = s.initialCards * cardPrice;
+    p.resources.megacredits = Math.max(0, p.resources.megacredits - cost);
+    log(g, `${p.name}: ${s.initialCards} cartas iniciales${cost ? ` (−${cost} M€)` : ' (gratis)'}`);
+  }
+
+  if (!withPreludes) return;
+  for (const id of s.preludes) {
+    const prelude = findPrelude(id);
+    if (prelude) applyPrelude(g, p, prelude);
+  }
+}
+
+function applyPrelude(g: Game, p: Player, d: PreludeDef) {
+  const notes: string[] = [];
+  addAmounts(p, 'production', d.production);
+  addAmounts(p, 'resources', d.stock);
+  if (d.tr) {
+    p.tr += d.tr;
+    notes.push(`+${d.tr} TR`);
+  }
+  for (let i = 0; i < (d.temperature ?? 0); i++) raiseTemperature(g, p, notes);
+  for (let i = 0; i < (d.oxygen ?? 0); i++) raiseOxygen(g, p, notes);
+  for (let i = 0; i < (d.oceans ?? 0); i++) placeOcean(g, p, notes);
+  log(g, `${p.name}: preludio ${d.name}${notes.length ? ` · ${notes.join(' · ')}` : ''}`);
+}
+
+function addAmounts(p: Player, target: 'resources' | 'production', amounts?: Partial<ResourceMap>) {
+  for (const [k, v] of Object.entries(amounts ?? {}) as [ResourceKey, number][]) {
+    const min = target === 'production' ? productionMin(k) : 0;
+    p[target][k] = Math.max(min, p[target][k] + v);
+  }
 }
 
 /** Ganancias que recibirá el jugador en la fase de producción. */
@@ -165,6 +245,11 @@ function run(g: Game, a: Action): boolean {
   if (a.type === 'productionPhase') return productionPhase(g);
   if (a.type === 'lowerGlobal') return lowerGlobal(g, a.param);
   if (a.type === 'research') return researchPhase(g, a.purchases);
+  if (a.type === 'dismissReminder') {
+    if (!g.reminder) return false;
+    g.reminder = null;
+    return true;
+  }
   if (a.type === 'dismissNotice') {
     if (!g.turnNotice) return false;
     g.turnNotice = null;
@@ -264,7 +349,12 @@ function run(g: Game, a: Action): boolean {
       const what = a.label ? `${a.label} ` : '';
       const saved = listCost - a.cost;
       const discount = saved > 0 ? ` (lista ${listCost}, −${saved} por descuentos)` : '';
-      log(g, `${p.name}: pagó ${what}${a.cost} M€${discount} con ${describePayment(a.payment)}`);
+      let rebate = '';
+      if (p.corporationId === 'credicor' && listCost >= CREDICOR_REBATE.minCost) {
+        p.resources.megacredits += CREDICOR_REBATE.amount;
+        rebate = ` · CrediCor +${CREDICOR_REBATE.amount} M€`;
+      }
+      log(g, `${p.name}: pagó ${what}${a.cost} M€${discount} con ${describePayment(a.payment)}${rebate}`);
       return true;
     }
 
@@ -382,6 +472,7 @@ export function normalizeGame(g: Game): Game {
     p.titaniumValue ??= DEFAULT_TITANIUM_VALUE;
     p.discounts ??= [];
     p.cardCost ??= DEFAULT_CARD_COST;
+    p.corporationId ??= null;
   }
   // turn puede ser null a propósito (todos pasaron); solo se completa si falta el campo
   if (g.turn === undefined) g.turn = { playerId: firstPlayer(g).id, actions: 0 };
@@ -389,6 +480,8 @@ export function normalizeGame(g: Game): Game {
   g.actionsThisGen ??= {};
   g.turnNotice ??= null;
   g.researchPending ??= false;
+  g.options.prelude ??= false;
+  g.reminder ??= null;
   return g;
 }
 
@@ -452,7 +545,10 @@ function raiseVenus(g: Game, p: Player, notes: string[]): boolean {
   g.globals.venus += L.step;
   p.tr += 1;
   notes.push(`Venus a ${g.globals.venus}% (+1 TR)`);
-  if (g.globals.venus === 8) notes.push('bonus: roba 1 carta');
+  if (g.globals.venus === 8) {
+    notes.push('bonus: roba 1 carta');
+    g.reminder = { playerId: p.id, text: `${p.name} llevó Venus al 8%: robá 1 carta.` };
+  }
   if (g.globals.venus === 16) {
     p.tr += 1;
     notes.push('bonus: +1 TR');

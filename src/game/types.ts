@@ -7,6 +7,8 @@ export interface Player {
   name: string;
   color: string;
   corporation: string;
+  /** Id del catálogo de corporaciones, o null si se cargó a mano. */
+  corporationId: string | null;
   tr: number;
   resources: ResourceMap;
   production: ResourceMap;
@@ -55,6 +57,7 @@ export type GlobalKey = keyof Globals;
 export interface GameOptions {
   corporateEra: boolean;
   venus: boolean;
+  prelude: boolean;
 }
 
 export interface LogEntry {
@@ -100,4 +103,6 @@ export interface Game {
   turnNotice: TurnNotice | null;
   /** Al empezar una generación nueva, falta que cada jugador compre sus cartas. */
   researchPending: boolean;
+  /** Recordatorio de un bonus que hay que resolver en la mesa (p. ej. robar carta en Venus 8%). */
+  reminder: { playerId: string; text: string } | null;
 }

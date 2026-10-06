@@ -573,3 +573,34 @@ option, optgroup { background: var(--surface); color: var(--text); }
 .card-picker button.on { background: var(--accent); color: var(--on-accent); }
 .card-picker button:disabled { opacity: 0.3; cursor: not-allowed; }
 .research-foot { color: var(--text); }
+
+/* ---------- Armado de la partida ---------- */
+.setup-summary {
+  display: flex; flex-direction: column; gap: 2px;
+  background: var(--surface-2); border-radius: var(--radius-sm);
+  padding: 8px 10px; font-size: 0.85rem; color: var(--text);
+}
+.setup-summary small { font-size: 0.75rem; }
+.setup-cards { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.setup-label { font-weight: 500; font-size: 0.9rem; }
+.setup-cards-value { min-width: 2ch; text-align: center; font-size: 1.3rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.setup-preludes { display: flex; flex-direction: column; gap: 10px; }
+.setup-balance {
+  border-top: 1px solid var(--border); padding-top: 10px;
+  font-size: 0.88rem; color: var(--muted);
+}
+.setup-balance strong { color: var(--text); }
+.setup-balance.bad { color: var(--danger); font-weight: 500; }
+.player-setup select { background: var(--bg); }
+.corp-note { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+.reminder {
+  display: flex; align-items: center; gap: 10px;
+  background: color-mix(in srgb, var(--c-venus) 14%, var(--surface));
+  border: 1px solid var(--c-venus);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 10px 10px 10px 12px;
+  font-weight: 500;
+}
+.reminder > svg { color: var(--c-venus); flex-shrink: 0; }
