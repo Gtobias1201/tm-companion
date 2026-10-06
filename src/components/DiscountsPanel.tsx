@@ -1,3 +1,4 @@
+import { IconX } from '@tabler/icons-react';
 import { useState } from 'react';
 import { DISCOUNT_CARDS, TAG_INFO, scopeLabel } from '../game/constants';
 import type { Action } from '../game/logic';
@@ -51,7 +52,7 @@ export function DiscountsPanel({ player, dispatch }: Props) {
                 aria-label={`Quitar ${d.name}`}
                 onClick={() => dispatch({ type: 'removeDiscount', playerId: pid, discountId: d.id })}
               >
-                ✕
+                <IconX size={16} />
               </button>
             </li>
           ))}

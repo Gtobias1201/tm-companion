@@ -3,6 +3,7 @@ import { RESOURCE_INFO, STANDARD_PROJECTS, TAG_INFO, scopeLabel } from '../game/
 import { applicableDiscounts, bestPayment, canAfford, paymentValue, paymentWith } from '../game/logic';
 import { CARD_TAGS, type CardTag, type Payment, type Player, type PurchaseKind } from '../game/types';
 import { Modal } from './Modal';
+import { ResourceIcon, TagIcon } from './icons';
 
 export interface PayRequest {
   cost: number;
@@ -145,7 +146,8 @@ export function PaymentDialog({ player, venus, onPay, onClose }: Props) {
                   style={{ '--t-color': TAG_INFO[t].color } as CSSProperties}
                   onClick={() => toggleTag(t)}
                 >
-                  <span aria-hidden>{TAG_INFO[t].icon}</span> {TAG_INFO[t].label}
+                  <TagIcon tag={t} size={18} />
+                  {TAG_INFO[t].label}
                   {t === 'building' && <small>acero = {player.steelValue}</small>}
                   {t === 'space' && <small>titanio = {player.titaniumValue}</small>}
                 </button>
@@ -208,8 +210,8 @@ export function PaymentDialog({ player, venus, onPay, onClose }: Props) {
               const used = payment?.[r.key] ?? 0;
               return (
                 <div key={r.key} className="payment-row" style={{ '--res-color': info.color } as CSSProperties}>
-                  <span className="res-icon" aria-hidden>
-                    {info.icon}
+                  <span className="res-icon">
+                    <ResourceIcon resource={r.key} />
                   </span>
                   <span className="payment-row-label">
                     {info.label}
@@ -234,8 +236,8 @@ export function PaymentDialog({ player, venus, onPay, onClose }: Props) {
             })}
 
           <div className="payment-row" style={{ '--res-color': RESOURCE_INFO.megacredits.color } as CSSProperties}>
-            <span className="res-icon" aria-hidden>
-              M€
+            <span className="res-icon">
+              <ResourceIcon resource="megacredits" />
             </span>
             <span className="payment-row-label">
               MegaCréditos

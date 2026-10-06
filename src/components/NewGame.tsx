@@ -1,3 +1,4 @@
+import { IconArrowLeft, IconX } from '@tabler/icons-react';
 import { useState, type FormEvent } from 'react';
 import { PLAYER_COLORS } from '../game/constants';
 import { createGame, type PlayerSetup } from '../game/logic';
@@ -42,7 +43,7 @@ export function NewGame({ onCreate, onCancel }: Props) {
     <form className="page" onSubmit={submit}>
       <header className="topbar">
         <button type="button" className="icon-btn" onClick={onCancel} aria-label="Volver">
-          ←
+          <IconArrowLeft size={20} />
         </button>
         <h1>Nueva partida</h1>
       </header>
@@ -70,7 +71,7 @@ export function NewGame({ onCreate, onCancel }: Props) {
                 aria-label={`Quitar ${p.name}`}
                 onClick={() => setPlayers((ps) => ps.filter((_, j) => j !== i))}
               >
-                ✕
+                <IconX size={18} />
               </button>
             )}
           </div>

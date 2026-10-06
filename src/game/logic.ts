@@ -1,10 +1,12 @@
 import {
+  DEFAULT_CARD_COST,
   DEFAULT_GREENERY_COST,
   DEFAULT_STEEL_VALUE,
   DEFAULT_TITANIUM_VALUE,
   GLOBAL_INFO,
   HEAT_PER_TEMPERATURE,
   LIMITS,
+  RESEARCH_CARDS,
   RESOURCE_INFO,
   formatTemperature,
 } from './constants';
@@ -22,7 +24,7 @@ import {
 } from './types';
 
 export type PlayerPatch = Partial<
-  Pick<Player, 'name' | 'color' | 'corporation' | 'greeneryCost' | 'steelValue' | 'titaniumValue'>
+  Pick<Player, 'name' | 'color' | 'corporation' | 'greeneryCost' | 'steelValue' | 'titaniumValue' | 'cardCost'>
 >;
 
 export type Action =
@@ -36,6 +38,11 @@ export type Action =
   | { type: 'pay'; playerId: string; cost: number; payment: Payment; listCost?: number; label?: string }
   | { type: 'addDiscount'; playerId: string; discount: Omit<Discount, 'id'> }
   | { type: 'removeDiscount'; playerId: string; discountId: string }
+  | { type: 'registerAction'; playerId: string }
+  | { type: 'endTurn'; playerId: string }
+  | { type: 'pass'; playerId: string }
+  | { type: 'dismissNotice' }
+  | { type: 'research'; purchases: Record<string, number> }
   | { type: 'productionPhase' }
   | { type: 'setActive'; playerId: string }
   | { type: 'updatePlayer'; playerId: string; patch: PlayerPatch };
@@ -65,6 +72,14 @@ const filled = (n: number): ResourceMap =>
 
 const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`);
 
+export const ACTIONS_PER_TURN = 2;
+
+/** Acciones de la app que consumen una acción del turno. */
+const TURN_ACTIONS: ReadonlySet<Action['type']> = new Set(['pay', 'greenery', 'heatToTemperature', 'registerAction']);
+
+/** Cambios que no se guardan en el historial de deshacer. */
+export const isViewOnly = (a: Action) => a.type === 'setActive' || a.type === 'dismissNotice';
+
 export const productionMin = (key: ResourceKey) => (key === 'megacredits' ? -5 : 0);
 
 export const isSolo = (g: Game) => g.players.length === 1;
@@ -92,6 +107,7 @@ export function createGame(setup: GameSetup): Game {
     greeneryCost: DEFAULT_GREENERY_COST,
     steelValue: DEFAULT_STEEL_VALUE,
     titaniumValue: DEFAULT_TITANIUM_VALUE,
+    cardCost: DEFAULT_CARD_COST,
     discounts: [],
   }));
   const now = Date.now();
@@ -106,6 +122,11 @@ export function createGame(setup: GameSetup): Game {
     globals: { temperature: LIMITS.temperature.min, oxygen: 0, oceans: 0, venus: 0 },
     options: { corporateEra: setup.corporateEra, venus: setup.venus },
     log: [],
+    turn: { playerId: players[0].id, actions: 0 },
+    passed: [],
+    actionsThisGen: {},
+    turnNotice: null,
+    researchPending: false,
   };
   log(game, `Partida creada con ${players.length} jugador${players.length > 1 ? 'es' : ''}`);
   return game;
@@ -123,20 +144,56 @@ export function productionPreview(p: Player): ResourceMap {
 
 /** Aplica una acción y devuelve una partida nueva (o la misma si no cambió nada). */
 export function applyAction(game: Game, action: Action): Game {
-  const g = structuredClone(game);
+  // Completa campos nuevos también en partidas que ya estaban abiertas antes de actualizar
+  const g = normalizeGame(structuredClone(game));
+  if (TURN_ACTIONS.has(action.type) && 'playerId' in action && !isTurnOf(g, action.playerId)) return game;
+  if (!isViewOnly(action)) g.turnNotice = null;
   if (!run(g, action)) return game;
+  if (TURN_ACTIONS.has(action.type) && 'playerId' in action) countAction(g, action.playerId);
   g.updatedAt = Date.now();
   return g;
 }
 
+/** Durante la fase de investigación nadie puede hacer acciones todavía. */
+export const isTurnOf = (g: Game, playerId: string) => !g.researchPending && g.turn?.playerId === playerId;
+
+/** Cuántas cartas puede comprar el jugador en la fase de investigación. */
+export const maxCardsToBuy = (p: Player) =>
+  Math.min(RESEARCH_CARDS, p.cardCost > 0 ? Math.floor(p.resources.megacredits / p.cardCost) : RESEARCH_CARDS);
+
 function run(g: Game, a: Action): boolean {
   if (a.type === 'productionPhase') return productionPhase(g);
   if (a.type === 'lowerGlobal') return lowerGlobal(g, a.param);
+  if (a.type === 'research') return researchPhase(g, a.purchases);
+  if (a.type === 'dismissNotice') {
+    if (!g.turnNotice) return false;
+    g.turnNotice = null;
+    return true;
+  }
 
   const p = g.players.find((x) => x.id === a.playerId);
   if (!p) return false;
 
   switch (a.type) {
+    case 'registerAction':
+      log(g, `${p.name}: otra acción`);
+      return true;
+
+    case 'endTurn': {
+      if (!g.turn || g.turn.playerId !== p.id || g.turn.actions === 0) return false;
+      log(g, `${p.name}: terminó su turno con 1 acción`);
+      advanceTurn(g, p.id, 'end');
+      return true;
+    }
+
+    case 'pass': {
+      if (!isTurnOf(g, p.id)) return false;
+      g.passed.push(p.id);
+      log(g, `${p.name}: pasó`);
+      advanceTurn(g, p.id, 'pass');
+      return true;
+    }
+
     case 'setActive':
       if (g.activePlayerId === p.id) return false;
       g.activePlayerId = p.id;
@@ -233,6 +290,7 @@ function run(g: Game, a: Action): boolean {
       for (const k of ['greeneryCost', 'steelValue', 'titaniumValue'] as const) {
         if (patch[k] !== undefined) patch[k] = Math.max(1, Math.round(patch[k]));
       }
+      if (patch.cardCost !== undefined) patch.cardCost = Math.max(0, Math.round(patch.cardCost));
       Object.assign(p, patch);
       return true;
     }
@@ -323,7 +381,14 @@ export function normalizeGame(g: Game): Game {
     p.steelValue ??= DEFAULT_STEEL_VALUE;
     p.titaniumValue ??= DEFAULT_TITANIUM_VALUE;
     p.discounts ??= [];
+    p.cardCost ??= DEFAULT_CARD_COST;
   }
+  // turn puede ser null a propósito (todos pasaron); solo se completa si falta el campo
+  if (g.turn === undefined) g.turn = { playerId: firstPlayer(g).id, actions: 0 };
+  g.passed ??= [];
+  g.actionsThisGen ??= {};
+  g.turnNotice ??= null;
+  g.researchPending ??= false;
   return g;
 }
 
@@ -416,7 +481,56 @@ function productionPhase(g: Game): boolean {
   log(g, `Fin de la generación ${g.generation}: producción aplicada`);
   g.generation += 1;
   g.activePlayerId = firstPlayer(g).id;
+  g.turn = { playerId: g.activePlayerId, actions: 0 };
+  g.passed = [];
+  g.actionsThisGen = {};
+  g.turnNotice = null;
+  g.researchPending = true;
   return true;
+}
+
+/** Fase de investigación: cada jugador paga las cartas que se queda de las 4 que robó. */
+function researchPhase(g: Game, purchases: Record<string, number>): boolean {
+  if (!g.researchPending) return false;
+  for (const p of g.players) {
+    const n = purchases[p.id] ?? 0;
+    if (n < 0 || n > maxCardsToBuy(p)) return false;
+  }
+  const bought: string[] = [];
+  for (const p of g.players) {
+    const n = purchases[p.id] ?? 0;
+    p.resources.megacredits -= n * p.cardCost;
+    bought.push(`${p.name} ${n} carta${n === 1 ? '' : 's'}${n ? ` (−${n * p.cardCost} M€)` : ''}`);
+  }
+  g.researchPending = false;
+  log(g, `Investigación: ${bought.join(' · ')}`);
+  return true;
+}
+
+// ---------- Turnos ----------
+
+function countAction(g: Game, playerId: string) {
+  if (!g.turn) return;
+  g.turn.actions += 1;
+  g.actionsThisGen[playerId] = (g.actionsThisGen[playerId] ?? 0) + 1;
+  if (g.turn.actions >= ACTIONS_PER_TURN) advanceTurn(g, playerId, 'actions');
+}
+
+/** Pasa el turno al siguiente jugador (en orden) que todavía no pasó. */
+function advanceTurn(g: Game, fromId: string, reason: 'actions' | 'end' | 'pass') {
+  const n = g.players.length;
+  const from = g.players.findIndex((p) => p.id === fromId);
+  g.turnNotice = { playerId: fromId, reason };
+  for (let i = 1; i <= n; i++) {
+    const next = g.players[(from + i) % n];
+    if (!g.passed.includes(next.id)) {
+      g.turn = { playerId: next.id, actions: 0 };
+      g.activePlayerId = next.id;
+      return;
+    }
+  }
+  g.turn = null;
+  log(g, 'Todos pasaron: toca la fase de producción');
 }
 
 // ---------- Registro ----------

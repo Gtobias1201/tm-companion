@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import { GLOBAL_INFO, LIMITS } from '../game/constants';
 import type { Action } from '../game/logic';
 import type { Game, GlobalKey, Player } from '../game/types';
+import { GlobalIcon } from './icons';
 
 interface Props {
   game: Game;
@@ -26,7 +27,7 @@ export function GlobalsPanel({ game, active, dispatch }: Props) {
             <div key={k} className={`gauge ${maxed ? 'maxed' : ''}`} style={{ '--g-color': info.color } as CSSProperties}>
               <div className="gauge-top">
                 <span className="gauge-label">
-                  <span aria-hidden>{info.icon}</span> {info.label}
+                  <GlobalIcon param={k} size={14} /> {info.label}
                 </span>
                 <span className="gauge-value">{info.format(v)}</span>
               </div>
@@ -48,7 +49,7 @@ export function GlobalsPanel({ game, active, dispatch }: Props) {
                   disabled={maxed}
                   onClick={() => dispatch({ type: 'raiseGlobal', param: k, playerId: active.id })}
                 >
-                  {maxed ? 'Completo' : '+ subir'}
+                  {maxed ? 'Completo' : 'Subir'}
                 </button>
               </div>
             </div>

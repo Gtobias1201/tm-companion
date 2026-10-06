@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { DEFAULT_CARD_COST } from '../game/constants';
 import type { PlayerPatch } from '../game/logic';
 import type { Player } from '../game/types';
 import { ColorPicker } from './ColorPicker';
@@ -17,6 +18,7 @@ export function PlayerEditDialog({ player, onSave, onClose }: Props) {
   const [greeneryCost, setGreeneryCost] = useState(player.greeneryCost);
   const [steelValue, setSteelValue] = useState(player.steelValue);
   const [titaniumValue, setTitaniumValue] = useState(player.titaniumValue);
+  const [cardCost, setCardCost] = useState(player.cardCost ?? DEFAULT_CARD_COST);
 
   return (
     <Modal
@@ -29,7 +31,7 @@ export function PlayerEditDialog({ player, onSave, onClose }: Props) {
           </button>
           <button
             className="btn primary grow"
-            onClick={() => onSave({ name: name.trim() || player.name, corporation: corporation.trim(), color, greeneryCost, steelValue, titaniumValue })}
+            onClick={() => onSave({ name: name.trim() || player.name, corporation: corporation.trim(), color, greeneryCost, steelValue, titaniumValue, cardCost })}
           >
             Guardar
           </button>
@@ -82,6 +84,17 @@ export function PlayerEditDialog({ player, onSave, onClose }: Props) {
         </label>
       </div>
       <small className="muted">Normal: acero 2 y titanio 3 · Phobolog: titanio 4 · Advanced Alloys: +1 a ambos</small>
+      <label className="field">
+        <span>Costo por carta en la investigación (M€)</span>
+        <input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          value={cardCost}
+          onChange={(e) => setCardCost(Math.max(0, Number(e.target.value) || 0))}
+        />
+        <small className="muted">3 normalmente · Polyphemos 5 · Terralabs 1</small>
+      </label>
     </Modal>
   );
 }

@@ -1,4 +1,4 @@
-import { applyAction, normalizeGame, type Action } from './game/logic';
+import { applyAction, isViewOnly, normalizeGame, type Action } from './game/logic';
 import type { Game } from './game/types';
 
 const STORAGE_KEY = 'tm-companion:v1';
@@ -48,8 +48,11 @@ export function appReducer(s: AppState, a: AppAction): AppState {
     case 'create':
       return { ...s, games: { ...s.games, [a.game.id]: a.game }, currentId: a.game.id };
 
-    case 'open':
-      return s.games[a.id] ? { ...s, currentId: a.id } : s;
+    case 'open': {
+      const game = s.games[a.id];
+      if (!game) return s;
+      return { ...s, games: { ...s.games, [a.id]: normalizeGame(structuredClone(game)) }, currentId: a.id };
+    }
 
     case 'close':
       return { ...s, currentId: null };
@@ -67,11 +70,10 @@ export function appReducer(s: AppState, a: AppAction): AppState {
       const game = s.games[s.currentId];
       const next = applyAction(game, a.action);
       if (next === game) return s;
-      // cambiar de jugador no merece un paso de "deshacer"
-      const undo =
-        a.action.type === 'setActive'
-          ? s.undo
-          : { ...s.undo, [game.id]: [...(s.undo[game.id] ?? []), game].slice(-UNDO_LIMIT) };
+      // cambiar de jugador o cerrar avisos no merece un paso de "deshacer"
+      const undo = isViewOnly(a.action)
+        ? s.undo
+        : { ...s.undo, [game.id]: [...(s.undo[game.id] ?? []), game].slice(-UNDO_LIMIT) };
       return { ...s, games: { ...s.games, [game.id]: next }, undo };
     }
 

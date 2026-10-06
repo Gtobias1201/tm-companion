@@ -1,3 +1,4 @@
+import { IconTrash } from '@tabler/icons-react';
 import { colorHex } from '../game/constants';
 import { isTerraformed } from '../game/logic';
 import type { Game } from '../game/types';
@@ -53,7 +54,7 @@ export function Home({ games, onNew, onOpen, onDelete }: Props) {
                   if (confirm(`¿Borrar la partida "${g.name}"? No se puede recuperar.`)) onDelete(g.id);
                 }}
               >
-                🗑
+                <IconTrash size={18} />
               </button>
             </li>
           ))}

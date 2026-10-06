@@ -1,6 +1,7 @@
 import type { CSSProperties } from 'react';
 import { RESOURCE_INFO } from '../game/constants';
 import type { ResourceKey } from '../game/types';
+import { ResourceIcon } from './icons';
 
 interface Props {
   resource: ResourceKey;
@@ -17,8 +18,8 @@ export function ResourceCard({ resource, stock, production, productionMin, onSto
   return (
     <div className={`res-card res-${resource}`} style={{ '--res-color': info.color } as CSSProperties}>
       <div className="res-head">
-        <span className="res-icon" aria-hidden>
-          {info.icon}
+        <span className="res-icon">
+          <ResourceIcon resource={resource} />
         </span>
         <span className="res-label">{info.label}</span>
       </div>

@@ -1,3 +1,4 @@
+import { IconX } from '@tabler/icons-react';
 import type { ReactNode } from 'react';
 
 interface Props {
@@ -14,7 +15,7 @@ export function Modal({ title, onClose, children, footer }: Props) {
         <div className="modal-head">
           <h2>{title}</h2>
           <button className="icon-btn" onClick={onClose} aria-label="Cerrar">
-            ✕
+            <IconX size={18} />
           </button>
         </div>
         <div className="modal-body">{children}</div>

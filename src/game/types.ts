@@ -16,6 +16,8 @@ export interface Player {
   steelValue: number;
   /** M€ que vale cada titanio al pagar cartas espaciales (3; 4 con Phobolog o Advanced Alloys). */
   titaniumValue: number;
+  /** M€ por carta comprada en la fase de investigación (3; Polyphemos 5, Terralabs 1). */
+  cardCost: number;
   /** Cartas en juego que abaratan otras cartas (Space Station, Earth Office, ...). */
   discounts: Discount[];
 }
@@ -65,6 +67,19 @@ export interface LogEntry {
   amount?: number;
 }
 
+/** Turno en curso dentro de la fase de acciones. */
+export interface TurnState {
+  playerId: string;
+  /** Acciones hechas en este turno (máximo 2). */
+  actions: number;
+}
+
+/** Aviso de que un jugador terminó su turno, para poder volver a cargar efectos. */
+export interface TurnNotice {
+  playerId: string;
+  reason: 'actions' | 'end' | 'pass';
+}
+
 export interface Game {
   id: string;
   name: string;
@@ -76,4 +91,13 @@ export interface Game {
   globals: Globals;
   options: GameOptions;
   log: LogEntry[];
+  /** null cuando todos pasaron y falta la fase de producción. */
+  turn: TurnState | null;
+  /** Jugadores que pasaron en esta generación. */
+  passed: string[];
+  /** Acciones de cada jugador en la generación actual. */
+  actionsThisGen: Record<string, number>;
+  turnNotice: TurnNotice | null;
+  /** Al empezar una generación nueva, falta que cada jugador compre sus cartas. */
+  researchPending: boolean;
 }

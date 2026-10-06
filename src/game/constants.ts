@@ -1,20 +1,21 @@
 import type { CardTag, DiscountScope, GlobalKey, ResourceKey } from './types';
 
-export const RESOURCE_INFO: Record<ResourceKey, { label: string; icon: string; color: string }> = {
-  megacredits: { label: 'MegaCréditos', icon: 'M€', color: '#f2c14e' },
-  steel: { label: 'Acero', icon: '⚒', color: '#b07a45' },
-  titanium: { label: 'Titanio', icon: '✦', color: '#a9b4c2' },
-  plants: { label: 'Plantas', icon: '🌿', color: '#5cb85c' },
-  energy: { label: 'Energía', icon: '⚡', color: '#b07ce0' },
-  heat: { label: 'Calor', icon: '🔥', color: '#ef6a3e' },
+// Los colores son variables CSS: cambian solos entre el tema claro (Arena) y el oscuro (Noche).
+export const RESOURCE_INFO: Record<ResourceKey, { label: string; color: string }> = {
+  megacredits: { label: 'MegaCréditos', color: 'var(--c-mc)' },
+  steel: { label: 'Acero', color: 'var(--c-steel)' },
+  titanium: { label: 'Titanio', color: 'var(--c-titanium)' },
+  plants: { label: 'Plantas', color: 'var(--c-plants)' },
+  energy: { label: 'Energía', color: 'var(--c-energy)' },
+  heat: { label: 'Calor', color: 'var(--c-heat)' },
 };
 
 export const PLAYER_COLORS = [
-  { id: 'red', label: 'Rojo', hex: '#d9412b' },
-  { id: 'green', label: 'Verde', hex: '#3fa34d' },
-  { id: 'blue', label: 'Azul', hex: '#3a7bd5' },
-  { id: 'yellow', label: 'Amarillo', hex: '#e6c229' },
-  { id: 'black', label: 'Negro', hex: '#6b6b6b' },
+  { id: 'red', label: 'Rojo', hex: '#D85A30' },
+  { id: 'green', label: 'Verde', hex: '#639922' },
+  { id: 'blue', label: 'Azul', hex: '#378ADD' },
+  { id: 'yellow', label: 'Amarillo', hex: '#EF9F27' },
+  { id: 'black', label: 'Negro', hex: '#5F5E5A' },
 ];
 
 export function colorHex(id: string): string {
@@ -30,26 +31,28 @@ export const LIMITS: Record<GlobalKey, { min: number; max: number; step: number 
 
 export const formatTemperature = (t: number) => `${t > 0 ? '+' : ''}${t}°C`;
 
-export const GLOBAL_INFO: Record<GlobalKey, { label: string; icon: string; color: string; format: (v: number) => string }> = {
-  temperature: { label: 'Temperatura', icon: '🌡', color: '#ef6a3e', format: formatTemperature },
-  oxygen: { label: 'Oxígeno', icon: 'O₂', color: '#7ccf6a', format: (v) => `${v}%` },
-  oceans: { label: 'Océanos', icon: '🌊', color: '#4a9fe0', format: (v) => `${v}/9` },
-  venus: { label: 'Venus', icon: '♀', color: '#d9a0e0', format: (v) => `${v}%` },
+export const GLOBAL_INFO: Record<GlobalKey, { label: string; color: string; format: (v: number) => string }> = {
+  temperature: { label: 'Temperatura', color: 'var(--c-temp)', format: formatTemperature },
+  oxygen: { label: 'Oxígeno', color: 'var(--c-oxygen)', format: (v) => `${v}%` },
+  oceans: { label: 'Océanos', color: 'var(--c-ocean)', format: (v) => `${v}/9` },
+  venus: { label: 'Venus', color: 'var(--c-venus)', format: (v) => `${v}%` },
 };
 
 export const HEAT_PER_TEMPERATURE = 8;
 export const DEFAULT_GREENERY_COST = 8;
 export const DEFAULT_STEEL_VALUE = 2;
 export const DEFAULT_TITANIUM_VALUE = 3;
+export const DEFAULT_CARD_COST = 3;
+export const RESEARCH_CARDS = 4;
 export const SOLO_GENERATIONS = 14;
 
-export const TAG_INFO: Record<CardTag, { label: string; icon: string; color: string }> = {
-  building: { label: 'Edificio', icon: '🏗', color: '#b07a45' },
-  space: { label: 'Espacio', icon: '🚀', color: '#a9b4c2' },
-  earth: { label: 'Tierra', icon: '🌍', color: '#4a9fe0' },
-  science: { label: 'Ciencia', icon: '🔬', color: '#e8e8e8' },
-  power: { label: 'Energía', icon: '⚡', color: '#b07ce0' },
-  venus: { label: 'Venus', icon: '♀', color: '#d9a0e0' },
+export const TAG_INFO: Record<CardTag, { label: string; color: string }> = {
+  building: { label: 'Edificio', color: 'var(--c-steel)' },
+  space: { label: 'Espacio', color: 'var(--c-titanium)' },
+  earth: { label: 'Tierra', color: 'var(--c-ocean)' },
+  science: { label: 'Ciencia', color: 'var(--text)' },
+  power: { label: 'Energía', color: 'var(--c-energy)' },
+  venus: { label: 'Venus', color: 'var(--c-venus)' },
 };
 
 export function scopeLabel(scope: DiscountScope): string {

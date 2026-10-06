@@ -2,6 +2,7 @@ import { RESOURCE_INFO, colorHex } from '../game/constants';
 import { productionPreview } from '../game/logic';
 import { RESOURCES, type Game } from '../game/types';
 import { Modal } from './Modal';
+import { ResourceIcon } from './icons';
 
 interface Props {
   game: Game;
@@ -41,7 +42,7 @@ export function ProductionDialog({ game, onConfirm, onClose }: Props) {
                   const after = k === 'energy' ? Math.max(0, p.production.energy) : Math.max(0, p.resources[k] + gains[k]);
                   return (
                     <div key={k} className="prod-gain" style={{ color: RESOURCE_INFO[k].color }}>
-                      <span aria-hidden>{RESOURCE_INFO[k].icon}</span>
+                      <ResourceIcon resource={k} />
                       <span className="prod-gain-value">{after}</span>
                       <small className="muted">
                         {gains[k] >= 0 ? '+' : ''}

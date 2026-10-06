@@ -1,12 +1,14 @@
+import { IconCreditCard, IconPencil, IconTemperature, IconTrees } from '@tabler/icons-react';
 import { useState, type CSSProperties } from 'react';
 import { HEAT_PER_TEMPERATURE, LIMITS, RESOURCE_INFO, colorHex } from '../game/constants';
-import { productionMin, type Action } from '../game/logic';
+import { isTurnOf, productionMin, type Action } from '../game/logic';
 import { RESOURCES, type Game, type Player, type ResourceKey } from '../game/types';
 import { ResourceCard } from './ResourceCard';
 import { AmountDialog } from './AmountDialog';
 import { PlayerEditDialog } from './PlayerEditDialog';
 import { PaymentDialog } from './PaymentDialog';
 import { DiscountsPanel } from './DiscountsPanel';
+import { TurnPanel } from './TurnPanel';
 
 interface Props {
   game: Game;
@@ -20,6 +22,8 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
   const [paying, setPaying] = useState(false);
   const temperatureMaxed = game.globals.temperature >= LIMITS.temperature.max;
   const pid = player.id;
+  // Pagar, bosque y temperatura son acciones: solo en el turno del jugador
+  const canAct = isTurnOf(game, pid);
 
   return (
     <section className="player-board" style={{ '--p-color': colorHex(player.color) } as CSSProperties}>
@@ -29,9 +33,11 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
           {player.corporation && <div className="muted">{player.corporation}</div>}
         </div>
         <button className="icon-btn" onClick={() => setEditing(true)} aria-label="Editar jugador">
-          ✎
+          <IconPencil size={18} />
         </button>
       </div>
+
+      <TurnPanel game={game} player={player} dispatch={dispatch} />
 
       <div className="tr-row">
         <div>
@@ -64,8 +70,10 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
         ))}
       </div>
 
-      <button className="btn pay-btn block" onClick={() => setPaying(true)}>
-        💳 Pagar carta o proyecto
+      <button className="btn pay-btn block" disabled={!canAct} onClick={() => setPaying(true)}>
+        <span className="btn-title">
+          <IconCreditCard size={18} /> Pagar carta o proyecto
+        </span>
         <small>
           M€ · acero · titanio
           {player.discounts.length > 0 &&
@@ -77,19 +85,23 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
         <button
           className="btn convert"
           style={{ '--c-color': RESOURCE_INFO.plants.color } as CSSProperties}
-          disabled={player.resources.plants < player.greeneryCost}
+          disabled={!canAct || player.resources.plants < player.greeneryCost}
           onClick={() => dispatch({ type: 'greenery', playerId: pid })}
         >
-          🌲 Bosque
+          <span className="btn-title">
+            <IconTrees size={18} /> Bosque
+          </span>
           <small>−{player.greeneryCost} plantas · sube O₂</small>
         </button>
         <button
           className="btn convert"
           style={{ '--c-color': RESOURCE_INFO.heat.color } as CSSProperties}
-          disabled={player.resources.heat < HEAT_PER_TEMPERATURE || temperatureMaxed}
+          disabled={!canAct || player.resources.heat < HEAT_PER_TEMPERATURE || temperatureMaxed}
           onClick={() => dispatch({ type: 'heatToTemperature', playerId: pid })}
         >
-          🌡 Temperatura
+          <span className="btn-title">
+            <IconTemperature size={18} /> Temperatura
+          </span>
           <small>−{HEAT_PER_TEMPERATURE} calor · +1 TR</small>
         </button>
       </div>
