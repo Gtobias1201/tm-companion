@@ -1,0 +1,303 @@
+import {
+  DEFAULT_GREENERY_COST,
+  GLOBAL_INFO,
+  HEAT_PER_TEMPERATURE,
+  LIMITS,
+  RESOURCE_INFO,
+  formatTemperature,
+} from './constants';
+import { RESOURCES, type Game, type GlobalKey, type Player, type ResourceKey, type ResourceMap } from './types';
+
+export type PlayerPatch = Partial<Pick<Player, 'name' | 'color' | 'corporation' | 'greeneryCost'>>;
+
+export type Action =
+  | { type: 'resource'; playerId: string; key: ResourceKey; delta: number }
+  | { type: 'production'; playerId: string; key: ResourceKey; delta: number }
+  | { type: 'tr'; playerId: string; delta: number }
+  | { type: 'raiseGlobal'; param: GlobalKey; playerId: string }
+  | { type: 'lowerGlobal'; param: GlobalKey }
+  | { type: 'greenery'; playerId: string }
+  | { type: 'heatToTemperature'; playerId: string }
+  | { type: 'productionPhase' }
+  | { type: 'setActive'; playerId: string }
+  | { type: 'updatePlayer'; playerId: string; patch: PlayerPatch };
+
+export interface PlayerSetup {
+  name: string;
+  color: string;
+  corporation: string;
+  startingMC: number;
+}
+
+export interface GameSetup {
+  name: string;
+  players: PlayerSetup[];
+  corporateEra: boolean;
+  venus: boolean;
+}
+
+export function uid(): string {
+  // randomUUID solo existe en contextos seguros (no al abrir por IP de la red local)
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+}
+
+const filled = (n: number): ResourceMap =>
+  Object.fromEntries(RESOURCES.map((k) => [k, n])) as ResourceMap;
+
+const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`);
+
+export const productionMin = (key: ResourceKey) => (key === 'megacredits' ? -5 : 0);
+
+export const isSolo = (g: Game) => g.players.length === 1;
+
+export const firstPlayer = (g: Game) => g.players[(g.generation - 1) % g.players.length];
+
+export function isTerraformed(g: Game): boolean {
+  const { temperature, oxygen, oceans } = g.globals;
+  return (
+    temperature >= LIMITS.temperature.max && oxygen >= LIMITS.oxygen.max && oceans >= LIMITS.oceans.max
+  );
+}
+
+export function createGame(setup: GameSetup): Game {
+  const solo = setup.players.length === 1;
+  const baseProduction = setup.corporateEra ? 0 : 1;
+  const players: Player[] = setup.players.map((s, i) => ({
+    id: uid(),
+    name: s.name.trim() || `Jugador ${i + 1}`,
+    color: s.color,
+    corporation: s.corporation.trim(),
+    tr: solo ? 14 : 20,
+    resources: { ...filled(0), megacredits: Math.max(0, s.startingMC || 0) },
+    production: filled(baseProduction),
+    greeneryCost: DEFAULT_GREENERY_COST,
+  }));
+  const now = Date.now();
+  const game: Game = {
+    id: uid(),
+    name: setup.name.trim() || 'Partida',
+    createdAt: now,
+    updatedAt: now,
+    generation: 1,
+    players,
+    activePlayerId: players[0].id,
+    globals: { temperature: LIMITS.temperature.min, oxygen: 0, oceans: 0, venus: 0 },
+    options: { corporateEra: setup.corporateEra, venus: setup.venus },
+    log: [],
+  };
+  log(game, `Partida creada con ${players.length} jugador${players.length > 1 ? 'es' : ''}`);
+  return game;
+}
+
+/** Ganancias que recibirá el jugador en la fase de producción. */
+export function productionPreview(p: Player): ResourceMap {
+  const gains = filled(0);
+  for (const k of RESOURCES) gains[k] = Math.max(0, p.production[k]);
+  gains.megacredits = p.tr + p.production.megacredits;
+  gains.heat += p.resources.energy;
+  gains.energy = p.production.energy - p.resources.energy;
+  return gains;
+}
+
+/** Aplica una acción y devuelve una partida nueva (o la misma si no cambió nada). */
+export function applyAction(game: Game, action: Action): Game {
+  const g = structuredClone(game);
+  if (!run(g, action)) return game;
+  g.updatedAt = Date.now();
+  return g;
+}
+
+function run(g: Game, a: Action): boolean {
+  if (a.type === 'productionPhase') return productionPhase(g);
+  if (a.type === 'lowerGlobal') return lowerGlobal(g, a.param);
+
+  const p = g.players.find((x) => x.id === a.playerId);
+  if (!p) return false;
+
+  switch (a.type) {
+    case 'setActive':
+      if (g.activePlayerId === p.id) return false;
+      g.activePlayerId = p.id;
+      return true;
+
+    case 'resource': {
+      const prev = p.resources[a.key];
+      const next = Math.max(0, prev + a.delta);
+      if (next === prev) return false;
+      p.resources[a.key] = next;
+      const label = RESOURCE_INFO[a.key].label;
+      logDelta(g, `res:${p.id}:${a.key}`, next - prev, (n) => `${p.name}: ${signed(n)} ${label}`);
+      return true;
+    }
+
+    case 'production': {
+      const prev = p.production[a.key];
+      const next = Math.max(productionMin(a.key), prev + a.delta);
+      if (next === prev) return false;
+      p.production[a.key] = next;
+      const label = RESOURCE_INFO[a.key].label;
+      logDelta(g, `prod:${p.id}:${a.key}`, next - prev, (n) => `${p.name}: ${signed(n)} producción de ${label}`);
+      return true;
+    }
+
+    case 'tr': {
+      const next = Math.max(0, p.tr + a.delta);
+      if (next === p.tr) return false;
+      const d = next - p.tr;
+      p.tr = next;
+      logDelta(g, `tr:${p.id}`, d, (n) => `${p.name}: ${signed(n)} TR`);
+      return true;
+    }
+
+    case 'raiseGlobal': {
+      const notes: string[] = [];
+      if (!raise(g, a.param, p, notes)) return false;
+      log(g, `${p.name}: ${notes.join(' · ')}`);
+      return true;
+    }
+
+    case 'greenery': {
+      if (p.resources.plants < p.greeneryCost) return false;
+      p.resources.plants -= p.greeneryCost;
+      const notes = [`bosque (−${p.greeneryCost} plantas)`];
+      if (!raiseOxygen(g, p, notes)) notes.push('oxígeno al máximo, sin TR');
+      log(g, `${p.name}: ${notes.join(' · ')}`);
+      return true;
+    }
+
+    case 'heatToTemperature': {
+      if (p.resources.heat < HEAT_PER_TEMPERATURE) return false;
+      if (g.globals.temperature >= LIMITS.temperature.max) return false;
+      p.resources.heat -= HEAT_PER_TEMPERATURE;
+      const notes = [`−${HEAT_PER_TEMPERATURE} calor`];
+      raiseTemperature(g, p, notes);
+      log(g, `${p.name}: ${notes.join(' · ')}`);
+      return true;
+    }
+
+    case 'updatePlayer': {
+      const patch = { ...a.patch };
+      if (patch.greeneryCost !== undefined) patch.greeneryCost = Math.max(1, Math.round(patch.greeneryCost));
+      Object.assign(p, patch);
+      return true;
+    }
+  }
+}
+
+// ---------- Parámetros globales (con sus bonus del tablero) ----------
+
+function raise(g: Game, param: GlobalKey, p: Player, notes: string[]): boolean {
+  switch (param) {
+    case 'temperature':
+      return raiseTemperature(g, p, notes);
+    case 'oxygen':
+      return raiseOxygen(g, p, notes);
+    case 'oceans':
+      return placeOcean(g, p, notes);
+    case 'venus':
+      return raiseVenus(g, p, notes);
+  }
+}
+
+function raiseTemperature(g: Game, p: Player, notes: string[]): boolean {
+  const L = LIMITS.temperature;
+  if (g.globals.temperature >= L.max) return false;
+  g.globals.temperature += L.step;
+  p.tr += 1;
+  const t = g.globals.temperature;
+  notes.push(`temperatura a ${formatTemperature(t)} (+1 TR)`);
+  if (t === -24 || t === -20) {
+    p.production.heat += 1;
+    notes.push('bonus: +1 producción de calor');
+  }
+  if (t === 0 && g.globals.oceans < LIMITS.oceans.max) {
+    notes.push('bonus: coloca un océano');
+    placeOcean(g, p, notes);
+  }
+  return true;
+}
+
+function raiseOxygen(g: Game, p: Player, notes: string[]): boolean {
+  const L = LIMITS.oxygen;
+  if (g.globals.oxygen >= L.max) return false;
+  g.globals.oxygen += L.step;
+  p.tr += 1;
+  notes.push(`oxígeno a ${g.globals.oxygen}% (+1 TR)`);
+  if (g.globals.oxygen === 8 && g.globals.temperature < LIMITS.temperature.max) {
+    notes.push('bonus: sube la temperatura');
+    raiseTemperature(g, p, notes);
+  }
+  return true;
+}
+
+function placeOcean(g: Game, p: Player, notes: string[]): boolean {
+  if (g.globals.oceans >= LIMITS.oceans.max) return false;
+  g.globals.oceans += 1;
+  p.tr += 1;
+  notes.push(`océano ${g.globals.oceans}/9 (+1 TR)`);
+  return true;
+}
+
+function raiseVenus(g: Game, p: Player, notes: string[]): boolean {
+  const L = LIMITS.venus;
+  if (g.globals.venus >= L.max) return false;
+  g.globals.venus += L.step;
+  p.tr += 1;
+  notes.push(`Venus a ${g.globals.venus}% (+1 TR)`);
+  if (g.globals.venus === 8) notes.push('bonus: roba 1 carta');
+  if (g.globals.venus === 16) {
+    p.tr += 1;
+    notes.push('bonus: +1 TR');
+  }
+  return true;
+}
+
+/** Corrección manual: baja el parámetro sin tocar TR ni bonus. */
+function lowerGlobal(g: Game, param: GlobalKey): boolean {
+  const L = LIMITS[param];
+  if (g.globals[param] <= L.min) return false;
+  g.globals[param] -= L.step;
+  log(g, `Corrección: ${GLOBAL_INFO[param].label} a ${GLOBAL_INFO[param].format(g.globals[param])}`);
+  return true;
+}
+
+function productionPhase(g: Game): boolean {
+  for (const p of g.players) {
+    const gains = productionPreview(p);
+    for (const k of RESOURCES) {
+      if (k !== 'energy') p.resources[k] = Math.max(0, p.resources[k] + gains[k]);
+    }
+    // la energía sobrante pasó a calor: solo queda la nueva producción
+    p.resources.energy = Math.max(0, p.production.energy);
+  }
+  log(g, `Fin de la generación ${g.generation}: producción aplicada`);
+  g.generation += 1;
+  g.activePlayerId = firstPlayer(g).id;
+  return true;
+}
+
+// ---------- Registro ----------
+
+function log(g: Game, text: string) {
+  g.log.push({ id: uid(), generation: g.generation, text, at: Date.now() });
+  if (g.log.length > 400) g.log.splice(0, g.log.length - 400);
+}
+
+const MERGE_WINDOW_MS = 20_000;
+
+function logDelta(g: Game, mergeKey: string, delta: number, format: (total: number) => string) {
+  const last = g.log[g.log.length - 1];
+  if (last && last.mergeKey === mergeKey && Date.now() - last.at < MERGE_WINDOW_MS) {
+    const total = (last.amount ?? 0) + delta;
+    if (total === 0) {
+      g.log.pop();
+      return;
+    }
+    last.amount = total;
+    last.text = format(total);
+    last.at = Date.now();
+    return;
+  }
+  g.log.push({ id: uid(), generation: g.generation, text: format(delta), at: Date.now(), mergeKey, amount: delta });
+}
