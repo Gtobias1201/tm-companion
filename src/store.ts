@@ -1,4 +1,4 @@
-import { applyAction, type Action } from './game/logic';
+import { applyAction, normalizeGame, type Action } from './game/logic';
 import type { Game } from './game/types';
 
 const STORAGE_KEY = 'tm-companion:v1';
@@ -24,8 +24,10 @@ export function loadState(): AppState {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const saved = JSON.parse(raw) as Pick<AppState, 'games' | 'currentId'>;
-      const currentId = saved.currentId && saved.games[saved.currentId] ? saved.currentId : null;
-      return { games: saved.games ?? {}, currentId, undo: {} };
+      const games = saved.games ?? {};
+      Object.values(games).forEach(normalizeGame);
+      const currentId = saved.currentId && games[saved.currentId] ? saved.currentId : null;
+      return { games, currentId, undo: {} };
     }
   } catch {
     // datos corruptos o storage bloqueado: arrancamos vacío

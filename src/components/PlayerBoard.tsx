@@ -5,6 +5,7 @@ import { RESOURCES, type Game, type Player, type ResourceKey } from '../game/typ
 import { ResourceCard } from './ResourceCard';
 import { AmountDialog } from './AmountDialog';
 import { PlayerEditDialog } from './PlayerEditDialog';
+import { PaymentDialog } from './PaymentDialog';
 
 interface Props {
   game: Game;
@@ -15,6 +16,7 @@ interface Props {
 export function PlayerBoard({ game, player, dispatch }: Props) {
   const [amountKey, setAmountKey] = useState<ResourceKey | null>(null);
   const [editing, setEditing] = useState(false);
+  const [paying, setPaying] = useState(false);
   const temperatureMaxed = game.globals.temperature >= LIMITS.temperature.max;
   const pid = player.id;
 
@@ -61,6 +63,11 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
         ))}
       </div>
 
+      <button className="btn pay-btn block" onClick={() => setPaying(true)}>
+        💳 Pagar carta o proyecto
+        <small>M€ · acero · titanio</small>
+      </button>
+
       <div className="conversions">
         <button
           className="btn convert"
@@ -91,6 +98,16 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
           onApply={(delta) => {
             dispatch({ type: 'resource', playerId: pid, key: amountKey, delta });
             setAmountKey(null);
+          }}
+        />
+      )}
+      {paying && (
+        <PaymentDialog
+          player={player}
+          onClose={() => setPaying(false)}
+          onPay={(cost, payment) => {
+            dispatch({ type: 'pay', playerId: pid, cost, payment });
+            setPaying(false);
           }}
         />
       )}

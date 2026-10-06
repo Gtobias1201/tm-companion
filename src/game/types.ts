@@ -12,6 +12,16 @@ export interface Player {
   production: ResourceMap;
   /** Plantas necesarias para un bosque (8 normalmente, 7 con Ecoline). */
   greeneryCost: number;
+  /** M€ que vale cada acero al pagar cartas de edificio (2; 3 con Advanced Alloys). */
+  steelValue: number;
+  /** M€ que vale cada titanio al pagar cartas espaciales (3; 4 con Phobolog o Advanced Alloys). */
+  titaniumValue: number;
+}
+
+export interface Payment {
+  megacredits: number;
+  steel: number;
+  titanium: number;
 }
 
 export interface Globals {

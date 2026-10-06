@@ -15,6 +15,8 @@ export function PlayerEditDialog({ player, onSave, onClose }: Props) {
   const [corporation, setCorporation] = useState(player.corporation);
   const [color, setColor] = useState(player.color);
   const [greeneryCost, setGreeneryCost] = useState(player.greeneryCost);
+  const [steelValue, setSteelValue] = useState(player.steelValue);
+  const [titaniumValue, setTitaniumValue] = useState(player.titaniumValue);
 
   return (
     <Modal
@@ -27,7 +29,7 @@ export function PlayerEditDialog({ player, onSave, onClose }: Props) {
           </button>
           <button
             className="btn primary grow"
-            onClick={() => onSave({ name: name.trim() || player.name, corporation: corporation.trim(), color, greeneryCost })}
+            onClick={() => onSave({ name: name.trim() || player.name, corporation: corporation.trim(), color, greeneryCost, steelValue, titaniumValue })}
           >
             Guardar
           </button>
@@ -57,6 +59,29 @@ export function PlayerEditDialog({ player, onSave, onClose }: Props) {
         />
         <small className="muted">8 normalmente · 7 con Ecoline</small>
       </label>
+      <div className="row">
+        <label className="field grow">
+          <span>Valor del acero (M€)</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            value={steelValue}
+            onChange={(e) => setSteelValue(Number(e.target.value) || 1)}
+          />
+        </label>
+        <label className="field grow">
+          <span>Valor del titanio (M€)</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            value={titaniumValue}
+            onChange={(e) => setTitaniumValue(Number(e.target.value) || 1)}
+          />
+        </label>
+      </div>
+      <small className="muted">Normal: acero 2 y titanio 3 · Phobolog: titanio 4 · Advanced Alloys: +1 a ambos</small>
     </Modal>
   );
 }

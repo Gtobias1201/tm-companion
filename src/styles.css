@@ -341,3 +341,49 @@ h2 { font-size: 1.05rem; }
 .log-gen { font-weight: 700; color: var(--accent-2); margin: 10px 0 4px; font-size: 0.85rem; }
 .log-line { display: flex; gap: 10px; font-size: 0.9rem; }
 .log-line time { flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+/* ---------- Pagos ---------- */
+.btn.pay-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  min-height: 56px;
+  background: color-mix(in srgb, #f2c14e 16%, var(--bg-2));
+  border-color: color-mix(in srgb, #f2c14e 45%, var(--border));
+}
+.btn.pay-btn small { font-weight: 400; color: var(--muted); font-size: 0.75rem; }
+
+.quick-costs { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+.quick-costs .btn { padding: 0; }
+
+.tag-toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tag-toggle {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  min-height: 56px; border-radius: 12px; cursor: pointer;
+  border: 2px solid var(--border); background: var(--bg-2); font-weight: 600;
+}
+.tag-toggle small { font-weight: 400; color: var(--muted); font-size: 0.75rem; }
+.tag-toggle.on {
+  border-color: var(--t-color);
+  background: color-mix(in srgb, var(--t-color) 22%, var(--bg-2));
+}
+
+.payment-plan {
+  background: var(--bg-2); border-radius: 12px; padding: 12px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.payment-plan-head { display: flex; justify-content: space-between; align-items: center; font-weight: 700; }
+.link-btn { background: none; border: none; color: var(--accent-2); cursor: pointer; padding: 4px 0; font-size: 0.85rem; }
+.payment-row { display: flex; align-items: center; gap: 10px; }
+.payment-row .res-icon {
+  width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+  display: grid; place-items: center;
+  background: color-mix(in srgb, var(--res-color) 25%, transparent);
+  color: var(--res-color); font-weight: 800; font-size: 0.8rem;
+}
+.payment-row-label { flex: 1; display: flex; flex-direction: column; font-weight: 600; }
+.payment-row-label small { font-weight: 400; font-size: 0.75rem; }
+.payment-row-value {
+  min-width: 2.5ch; text-align: center; font-size: 1.3rem; font-weight: 800;
+  color: var(--res-color); font-variant-numeric: tabular-nums;
+}
+.payment-warn { color: var(--danger); font-size: 0.85rem; font-weight: 600; }
+.payment-note { color: var(--muted); font-size: 0.85rem; }

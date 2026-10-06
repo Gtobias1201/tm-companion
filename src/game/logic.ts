@@ -1,14 +1,26 @@
 import {
   DEFAULT_GREENERY_COST,
+  DEFAULT_STEEL_VALUE,
+  DEFAULT_TITANIUM_VALUE,
   GLOBAL_INFO,
   HEAT_PER_TEMPERATURE,
   LIMITS,
   RESOURCE_INFO,
   formatTemperature,
 } from './constants';
-import { RESOURCES, type Game, type GlobalKey, type Player, type ResourceKey, type ResourceMap } from './types';
+import {
+  RESOURCES,
+  type Game,
+  type GlobalKey,
+  type Payment,
+  type Player,
+  type ResourceKey,
+  type ResourceMap,
+} from './types';
 
-export type PlayerPatch = Partial<Pick<Player, 'name' | 'color' | 'corporation' | 'greeneryCost'>>;
+export type PlayerPatch = Partial<
+  Pick<Player, 'name' | 'color' | 'corporation' | 'greeneryCost' | 'steelValue' | 'titaniumValue'>
+>;
 
 export type Action =
   | { type: 'resource'; playerId: string; key: ResourceKey; delta: number }
@@ -18,6 +30,7 @@ export type Action =
   | { type: 'lowerGlobal'; param: GlobalKey }
   | { type: 'greenery'; playerId: string }
   | { type: 'heatToTemperature'; playerId: string }
+  | { type: 'pay'; playerId: string; cost: number; payment: Payment }
   | { type: 'productionPhase' }
   | { type: 'setActive'; playerId: string }
   | { type: 'updatePlayer'; playerId: string; patch: PlayerPatch };
@@ -72,6 +85,8 @@ export function createGame(setup: GameSetup): Game {
     resources: { ...filled(0), megacredits: Math.max(0, s.startingMC || 0) },
     production: filled(baseProduction),
     greeneryCost: DEFAULT_GREENERY_COST,
+    steelValue: DEFAULT_STEEL_VALUE,
+    titaniumValue: DEFAULT_TITANIUM_VALUE,
   }));
   const now = Date.now();
   const game: Game = {
@@ -176,13 +191,101 @@ function run(g: Game, a: Action): boolean {
       return true;
     }
 
+    case 'pay': {
+      const { megacredits, steel, titanium } = a.payment;
+      if (a.cost <= 0 || !canAfford(p, a.payment) || paymentValue(p, a.payment) < a.cost) return false;
+      p.resources.megacredits -= megacredits;
+      p.resources.steel -= steel;
+      p.resources.titanium -= titanium;
+      log(g, `${p.name}: pagó ${a.cost} M€ con ${describePayment(a.payment)}`);
+      return true;
+    }
+
     case 'updatePlayer': {
       const patch = { ...a.patch };
-      if (patch.greeneryCost !== undefined) patch.greeneryCost = Math.max(1, Math.round(patch.greeneryCost));
+      for (const k of ['greeneryCost', 'steelValue', 'titaniumValue'] as const) {
+        if (patch[k] !== undefined) patch[k] = Math.max(1, Math.round(patch[k]));
+      }
       Object.assign(p, patch);
       return true;
     }
   }
+}
+
+// ---------- Pagos con acero y titanio ----------
+
+export interface PaymentRules {
+  /** La carta tiene etiqueta de edificio: acepta acero. */
+  steel: boolean;
+  /** La carta tiene etiqueta espacial: acepta titanio. */
+  titanium: boolean;
+}
+
+export const paymentValue = (p: Player, pay: Payment) =>
+  pay.megacredits + pay.steel * p.steelValue + pay.titanium * p.titaniumValue;
+
+export const canAfford = (p: Player, pay: Payment) =>
+  pay.megacredits >= 0 &&
+  pay.steel >= 0 &&
+  pay.titanium >= 0 &&
+  pay.megacredits <= p.resources.megacredits &&
+  pay.steel <= p.resources.steel &&
+  pay.titanium <= p.resources.titanium;
+
+/** Completa con M€ lo que no cubren el acero y el titanio elegidos. */
+export function paymentWith(p: Player, cost: number, steel: number, titanium: number): Payment {
+  const covered = steel * p.steelValue + titanium * p.titaniumValue;
+  return { megacredits: Math.max(0, cost - covered), steel, titanium };
+}
+
+/**
+ * Pago más eficiente para un costo dado. Prioridades:
+ * 1. no pagar de más (el acero/titanio sobrante no da vuelto),
+ * 2. gastar la menor cantidad de M€ posible,
+ * 3. conservar el titanio, que es más escaso.
+ * Devuelve null si el jugador no puede pagar.
+ */
+export function bestPayment(p: Player, cost: number, rules: PaymentRules): Payment | null {
+  if (cost <= 0) return null;
+  const maxSteel = rules.steel ? Math.min(p.resources.steel, Math.ceil(cost / p.steelValue)) : 0;
+  const maxTitanium = rules.titanium ? Math.min(p.resources.titanium, Math.ceil(cost / p.titaniumValue)) : 0;
+
+  let best: Payment | null = null;
+  let bestScore: number[] = [];
+  for (let t = 0; t <= maxTitanium; t++) {
+    for (let s = 0; s <= maxSteel; s++) {
+      const pay = paymentWith(p, cost, s, t);
+      if (!canAfford(p, pay)) continue;
+      const score = [paymentValue(p, pay) - cost, pay.megacredits, t];
+      if (!best || isLower(score, bestScore)) {
+        best = pay;
+        bestScore = score;
+      }
+    }
+  }
+  return best;
+}
+
+function isLower(a: number[], b: number[]) {
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] < b[i];
+  return false;
+}
+
+export function describePayment(pay: Payment): string {
+  const parts: string[] = [];
+  if (pay.steel) parts.push(`${pay.steel} acero`);
+  if (pay.titanium) parts.push(`${pay.titanium} titanio`);
+  if (pay.megacredits || parts.length === 0) parts.push(`${pay.megacredits} M€`);
+  return parts.join(' + ');
+}
+
+/** Completa campos agregados en versiones nuevas para partidas guardadas antes. */
+export function normalizeGame(g: Game): Game {
+  for (const p of g.players) {
+    p.steelValue ??= DEFAULT_STEEL_VALUE;
+    p.titaniumValue ??= DEFAULT_TITANIUM_VALUE;
+  }
+  return g;
 }
 
 // ---------- Parámetros globales (con sus bonus del tablero) ----------

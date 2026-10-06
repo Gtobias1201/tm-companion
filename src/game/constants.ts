@@ -39,4 +39,6 @@ export const GLOBAL_INFO: Record<GlobalKey, { label: string; icon: string; color
 
 export const HEAT_PER_TEMPERATURE = 8;
 export const DEFAULT_GREENERY_COST = 8;
+export const DEFAULT_STEEL_VALUE = 2;
+export const DEFAULT_TITANIUM_VALUE = 3;
 export const SOLO_GENERATIONS = 14;
