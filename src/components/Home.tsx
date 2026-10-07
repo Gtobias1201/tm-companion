@@ -1,8 +1,10 @@
-import { IconDeviceMobile, IconLogin, IconTrash, IconUser, IconWifi } from '@tabler/icons-react';
+import { IconBook, IconChevronRight, IconDeviceMobile, IconLogin, IconTrash, IconUser, IconWifi } from '@tabler/icons-react';
+import { useState } from 'react';
 import { colorHex } from '../game/constants';
 import { isTerraformed } from '../game/logic';
 import type { Game } from '../game/types';
 import type { ClientSession } from '../online/session';
+import { GUIDE_TOPIC_COUNT, Guide } from './Guide';
 
 interface Props {
   games: Game[];
@@ -17,6 +19,7 @@ interface Props {
 }
 
 export function Home({ games, clientSession, onHost, onJoin, onSolo, onRejoin, onOpen, onDelete }: Props) {
+  const [guide, setGuide] = useState(false);
   return (
     <div className="page">
       <header className="hero">
@@ -38,6 +41,17 @@ export function Home({ games, clientSession, onHost, onJoin, onSolo, onRejoin, o
           <IconUser size={18} /> Partida solitaria (sin conexión)
         </button>
       </div>
+
+      <button className="guide-entry" onClick={() => setGuide(true)}>
+        <span className="guide-icon big">
+          <IconBook size={22} />
+        </span>
+        <span className="grow">
+          <strong>Guía de uso</strong>
+          <small className="muted">Cómo se usa la app, en {GUIDE_TOPIC_COUNT} temas cortos</small>
+        </span>
+        <IconChevronRight size={18} className="muted" aria-hidden />
+      </button>
 
       {clientSession && (
         <button className="game-open rejoin" onClick={() => onRejoin(clientSession)}>
@@ -86,6 +100,8 @@ export function Home({ games, clientSession, onHost, onJoin, onSolo, onRejoin, o
           ))}
         </ul>
       )}
+
+      {guide && <Guide onClose={() => setGuide(false)} />}
     </div>
   );
 }

@@ -876,3 +876,106 @@ option, optgroup { background: var(--surface); color: var(--text); }
 .tile-option.city { border-left: 4px solid #9ea3a8; }
 .tile-option.ocean { border-left: 4px solid #3d8fd6; }
 .tile-option:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ---------- Guía de uso ---------- */
+.guide-entry {
+  display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer;
+  min-height: 64px; padding: 12px; border-radius: var(--radius);
+  background: var(--surface); border: 1px solid var(--border);
+}
+.guide-entry:hover { border-color: var(--border-strong); }
+.guide-entry .grow, .guide-topic .grow { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.guide-entry small, .guide-topic small { font-size: 0.82rem; }
+.guide-icon {
+  width: 36px; height: 36px; flex-shrink: 0; display: grid; place-items: center;
+  border-radius: 10px; background: var(--accent-soft); color: var(--accent-text);
+}
+.guide-icon.big { width: 42px; height: 42px; border-radius: 12px; }
+
+.guide {
+  position: fixed; inset: 0; z-index: 20;
+  background: var(--bg); display: flex; flex-direction: column;
+}
+.guide-col { width: 100%; max-width: 720px; margin: 0 auto; padding: 0 16px; box-sizing: border-box; }
+.guide-head { padding-top: calc(10px + env(safe-area-inset-top)); display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; }
+.guide-head .icon-btn { border: none; background: transparent; color: var(--text); }
+.guide-progress { height: 4px; border-radius: 2px; background: var(--surface-2); overflow: hidden; }
+.guide-progress span { display: block; height: 100%; background: var(--accent); transition: width 0.2s ease; }
+.guide-body { flex: 1; overflow-y: auto; padding: 8px 0 24px; }
+
+.guide-index { display: flex; flex-direction: column; gap: 6px; }
+.guide-index ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.guide-group {
+  margin: 12px 0 6px; font-size: 0.75rem; font-weight: 700;
+  letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted);
+}
+.guide-topic {
+  width: 100%; display: flex; align-items: center; gap: 12px; text-align: left; cursor: pointer;
+  min-height: 60px; padding: 10px 12px; border-radius: var(--radius);
+  background: var(--surface); border: 1px solid var(--border);
+}
+.guide-topic:hover { border-color: var(--border-strong); }
+
+.guide-page { display: flex; flex-direction: column; gap: 16px; }
+.guide-title { display: flex; align-items: center; gap: 12px; }
+.guide-title h2 { font-size: 1.15rem; }
+.guide-title p { margin: 2px 0 0; font-size: 0.85rem; }
+
+/* Ilustraciones: piezas reales de la app en miniatura, sin interacción */
+.guide-figure {
+  pointer-events: none; user-select: none; -webkit-user-select: none;
+  border-radius: 16px; background: var(--surface-2); border: 1px solid var(--border);
+  padding: 14px 12px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.guide-wide { width: 100%; max-width: 360px; box-sizing: border-box; }
+.guide-caption { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.guide-code { display: flex; gap: 6px; }
+.guide-code span {
+  width: 40px; height: 48px; display: grid; place-items: center;
+  border-radius: 8px; border: 1px solid var(--border-strong); background: var(--surface);
+  font: 700 1.5rem ui-monospace, Menlo, Consolas, monospace;
+}
+.guide-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+.guide-rows {
+  width: 100%; max-width: 360px; box-sizing: border-box;
+  display: grid; grid-template-columns: 1fr auto; gap: 6px 12px;
+  padding: 12px; border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+.guide-rows b { text-align: right; font-variant-numeric: tabular-nums; }
+.guide-rows-total { padding-top: 6px; border-top: 1px solid var(--border); }
+.guide-rows-total.accent { text-align: right; color: var(--accent-text); }
+.guide-gauges { width: 100%; max-width: 360px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.guide-gauges.three { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.guide-gauges figure { margin: 0; display: flex; flex-direction: column; gap: 6px; }
+.guide-gauges figcaption { font-size: 0.75rem; text-align: center; color: var(--muted); }
+.guide-highlight { box-shadow: 0 0 0 3px var(--accent); }
+.guide-figure .turn-bar { flex-wrap: wrap; padding: 8px 10px; }
+.guide-figure .turn-info { flex-basis: 100%; }
+.guide-figure .turn-bar .btn { flex: 1; }
+.guide-tiles { display: flex; gap: 6px; width: 100%; max-width: 360px; }
+.guide-tiles span {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px;
+  min-height: 36px; border-radius: var(--radius-sm); background: var(--surface); border: 1px solid var(--border);
+  font-size: 0.82rem; font-weight: 600;
+}
+.guide-gen { display: flex; align-items: center; gap: 10px; }
+.guide-gen .gen-badge:last-child { border-color: var(--accent); }
+.guide-milestones { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 8px; }
+.guide-milestones > div {
+  display: flex; align-items: center; gap: 8px; padding: 10px 12px;
+  border-radius: var(--radius); background: var(--surface); border: 1px solid var(--border);
+}
+.guide-milestones .grow { display: flex; flex-direction: column; font-size: 0.9rem; }
+.guide-milestones small { font-size: 0.75rem; }
+
+.guide-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.guide-steps li { display: flex; gap: 12px; align-items: flex-start; }
+.guide-steps p { margin: 2px 0 0; line-height: 1.45; }
+.guide-step-num {
+  width: 24px; height: 24px; flex-shrink: 0; display: grid; place-items: center;
+  border-radius: 50%; background: var(--accent-soft); color: var(--accent-text);
+  font-size: 0.8rem; font-weight: 700;
+}
+.guide-foot { border-top: 1px solid var(--border); padding: 12px 0 calc(12px + env(safe-area-inset-bottom)); }
+.guide-foot .guide-col { display: flex; gap: 8px; }

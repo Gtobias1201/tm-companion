@@ -3,6 +3,7 @@ import {
   IconArrowLeft,
   IconCards,
   IconChevronRight,
+  IconHelp,
   IconHistory,
   IconPlanet,
   IconX,
@@ -27,6 +28,7 @@ import { ResearchDialog } from './ResearchDialog';
 import { MilestonesPanel } from './MilestonesPanel';
 import { ScorePanel } from './ScorePanel';
 import { FinalPhase } from './FinalPhase';
+import { Guide } from './Guide';
 
 type View = 'player' | 'milestones' | 'score';
 
@@ -58,6 +60,7 @@ interface Props {
 export function GameScreen({ game, canUndo, dispatch, onUndo, onExit, online }: Props) {
   const [dialog, setDialog] = useState<'production' | 'research' | 'log' | null>(null);
   const [view, setView] = useState<View>('player');
+  const [guide, setGuide] = useState(false);
   // En online los avisos se cierran solo en este celular, no para toda la mesa
   const [dismissedNotice, setDismissedNotice] = useState<number | null>(null);
   const [dismissedReminder, setDismissedReminder] = useState<string | null>(null);
@@ -123,6 +126,9 @@ export function GameScreen({ game, canUndo, dispatch, onUndo, onExit, online }: 
         </div>
         <button className="icon-btn" onClick={() => setDialog('log')} aria-label="Registro">
           <IconHistory size={20} />
+        </button>
+        <button className="icon-btn" onClick={() => setGuide(true)} aria-label="Guía de uso">
+          <IconHelp size={20} />
         </button>
       </header>
 
@@ -291,6 +297,7 @@ export function GameScreen({ game, canUndo, dispatch, onUndo, onExit, online }: 
           }
         />
       )}
+      {guide && <Guide onClose={() => setGuide(false)} />}
     </div>
   );
 }
