@@ -310,8 +310,6 @@ function isAllowed(game: Game, action: Action, playerId: string, isHost: boolean
       return game.phase === 'playing' && !game.turn;
     case 'advancePhase':
       return isHost;
-    case 'lowerGlobal':
-      return true;
     default:
       return 'playerId' in action && action.playerId === playerId;
   }

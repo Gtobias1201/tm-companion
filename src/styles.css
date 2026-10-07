@@ -289,22 +289,34 @@ option, optgroup { background: var(--surface); color: var(--text); }
 /* ---------- Parámetros globales (fila compacta) ---------- */
 .globals { display: flex; flex-direction: column; }
 .gauges { display: grid; gap: 6px; }
-.gauge {
-  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
-  padding: 5px 5px 6px 7px; display: flex; flex-direction: column; gap: 5px; min-width: 0;
+/* Contenedor que recorta el deslizamiento y muestra el "−1" detrás del medidor */
+.gauge-swipe { position: relative; min-width: 0; border-radius: var(--radius-sm); overflow: hidden; background: var(--accent-soft); }
+.gauge-under {
+  position: absolute; inset: 0 8px 0 auto; display: grid; place-items: center;
+  font-weight: 700; font-size: 0.9rem; color: var(--accent-text);
 }
+.gauge-swipe.armed .gauge-under { color: var(--danger); }
+/* Todo el recuadro es el botón de subir */
+.gauge {
+  position: relative; width: 100%; text-align: left; cursor: pointer; font: inherit; color: inherit;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 6px 6px 7px 7px; display: flex; flex-direction: column; gap: 5px; min-width: 0;
+  touch-action: pan-y; user-select: none; -webkit-user-select: none;
+  transition: transform 0.18s ease, background-color 0.15s ease;
+}
+.gauge:active:not([aria-disabled='true']) { background: color-mix(in srgb, var(--g-color) 10%, var(--surface)); }
+.gauge[aria-disabled='true'] { cursor: default; }
 .gauge.maxed { border-color: var(--g-color); }
 .gauge-top { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
 .gauge-label { display: inline-flex; align-items: center; gap: 4px; color: var(--g-color); min-width: 0; }
 .gauge-value { font-size: 1rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.gauge-raise {
-  width: 26px; height: 28px; flex-shrink: 0; display: grid; place-items: center; cursor: pointer;
-  border-radius: 6px; border: 1px solid color-mix(in srgb, var(--g-color) 40%, var(--border));
-  background: color-mix(in srgb, var(--g-color) 14%, var(--surface)); color: var(--g-color);
+.gauge-plus {
+  width: 22px; height: 22px; flex-shrink: 0; display: grid; place-items: center;
+  border-radius: 6px; color: var(--g-color); font-size: 0.75rem; font-weight: 700;
+  background: color-mix(in srgb, var(--g-color) 14%, var(--surface));
 }
-.gauge-raise:disabled { opacity: 0.35; cursor: not-allowed; }
-.bar { height: 4px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
-.bar-fill { height: 100%; background: var(--g-color); border-radius: 99px; transition: width 0.25s ease; }
+.bar { display: block; height: 4px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.bar-fill { display: block; height: 100%; background: var(--g-color); border-radius: 99px; transition: width 0.25s ease; }
 
 /* ---------- Pestañas de jugadores ---------- */
 .player-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }

@@ -49,7 +49,8 @@ export type Action =
   | { type: 'production'; playerId: string; key: ResourceKey; delta: number }
   | { type: 'tr'; playerId: string; delta: number }
   | { type: 'raiseGlobal'; param: GlobalKey; playerId: string }
-  | { type: 'lowerGlobal'; param: GlobalKey }
+  /** Corrección: baja un paso y le quita 1 TR a quien corrige. */
+  | { type: 'lowerGlobal'; param: GlobalKey; playerId: string }
   | { type: 'greenery'; playerId: string }
   | { type: 'heatToTemperature'; playerId: string }
   | {
@@ -340,7 +341,6 @@ function run(g: Game, a: Action): boolean {
     g.awardValues[a.awardId] = { ...g.awardValues[a.awardId], [a.playerId]: Math.round(a.value) };
     return true;
   }
-  if (a.type === 'lowerGlobal') return lowerGlobal(g, a.param);
   if (a.type === 'research') return researchPhase(g, a.purchases);
   if (a.type === 'dismissReminder') {
     if (!g.reminder) return false;
@@ -409,6 +409,9 @@ function run(g: Game, a: Action): boolean {
       logDelta(g, `tr:${p.id}`, d, (n) => `${p.name}: ${signed(n)} TR`);
       return true;
     }
+
+    case 'lowerGlobal':
+      return lowerGlobal(g, a.param, p);
 
     case 'raiseGlobal': {
       const notes: string[] = [];
@@ -739,12 +742,16 @@ function raiseVenus(g: Game, p: Player, notes: string[]): boolean {
   return true;
 }
 
-/** Corrección manual: baja el parámetro sin tocar TR ni bonus. */
-function lowerGlobal(g: Game, param: GlobalKey): boolean {
+/**
+ * Corrección manual: baja el parámetro un paso y le quita 1 TR a quien corrige, simétrico a
+ * subirlo. Los bonus que ya se dieron (calor, océano, carta) se ajustan a mano si hace falta.
+ */
+function lowerGlobal(g: Game, param: GlobalKey, p: Player): boolean {
   const L = LIMITS[param];
   if (g.globals[param] <= L.min) return false;
   g.globals[param] -= L.step;
-  log(g, `Corrección: ${GLOBAL_INFO[param].label} a ${GLOBAL_INFO[param].format(g.globals[param])}`);
+  p.tr = Math.max(0, p.tr - 1);
+  log(g, `${p.name}: corrección de ${GLOBAL_INFO[param].label} a ${GLOBAL_INFO[param].format(g.globals[param])} (−1 TR)`);
   return true;
 }
 
