@@ -207,8 +207,9 @@ export function GameScreen({ game, canUndo, dispatch, onUndo, onExit, online }: 
 
           {view === 'player' && <GlobalsPanel game={game} active={active} dispatch={dispatch} />}
 
+          {/* Online, la mesa se ve en "Puntos" para que la vista principal entre en una pantalla */}
           {online ? (
-            <TableStrip game={game} me={online.me} />
+            view === 'score' && <TableStrip game={game} me={online.me} />
           ) : (
             game.players.length > 1 && (
               <nav className="player-tabs" aria-label="Jugadores" ref={tabsRef}>

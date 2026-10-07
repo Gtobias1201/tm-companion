@@ -38,6 +38,8 @@ import {
   type ScoreKey,
 } from './types';
 
+export type TileKind = 'greenery' | 'city' | 'ocean';
+
 export type PlayerPatch = Partial<
   Pick<Player, 'name' | 'color' | 'corporation' | 'greeneryCost' | 'steelValue' | 'titaniumValue' | 'cardCost'>
 >;
@@ -69,6 +71,8 @@ export type Action =
   | { type: 'advancePhase' }
   /** Investigación de un solo jugador desde su celular (modo online). */
   | { type: 'researchBuy'; playerId: string; cards: number }
+  /** Loseta colocada por una carta de proyecto (no gasta acción: la acción fue jugar la carta). */
+  | { type: 'placeTile'; playerId: string; tile: TileKind }
   | { type: 'addDiscount'; playerId: string; discount: Omit<Discount, 'id'> }
   | { type: 'removeDiscount'; playerId: string; discountId: string }
   | { type: 'registerAction'; playerId: string }
@@ -464,6 +468,25 @@ function run(g: Game, a: Action): boolean {
       g.researchDone.push(p.id);
       log(g, `Investigación: ${p.name} ${n} carta${n === 1 ? '' : 's'}${n ? ` (−${cost} M€)` : ''}`);
       if (g.players.every((x) => g.researchDone.includes(x.id))) g.researchPending = false;
+      return true;
+    }
+
+    case 'placeTile': {
+      if (g.phase !== 'playing') return false;
+      const notes: string[] = [];
+      if (a.tile === 'greenery') {
+        p.score.greeneries += 1;
+        notes.push('loseta de bosque');
+        // Colocar un bosque siempre sube el oxígeno, venga de donde venga
+        if (!raiseOxygen(g, p, notes)) notes.push('oxígeno al máximo, sin TR');
+      } else if (a.tile === 'city') {
+        p.score.cities += 1;
+        notes.push('loseta de ciudad');
+      } else {
+        notes.push('loseta de océano');
+        if (!placeOcean(g, p, notes)) return false;
+      }
+      log(g, `${p.name}: ${notes.join(' · ')}`);
       return true;
     }
 
