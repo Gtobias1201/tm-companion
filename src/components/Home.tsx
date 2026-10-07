@@ -1,33 +1,57 @@
-import { IconTrash } from '@tabler/icons-react';
+import { IconDeviceMobile, IconLogin, IconTrash, IconUser, IconWifi } from '@tabler/icons-react';
 import { colorHex } from '../game/constants';
 import { isTerraformed } from '../game/logic';
 import type { Game } from '../game/types';
+import type { ClientSession } from '../online/session';
 
 interface Props {
   games: Game[];
-  onNew: () => void;
+  /** Última partida online a la que se unió este celular como invitado. */
+  clientSession: ClientSession | null;
+  onHost: () => void;
+  onJoin: () => void;
+  onSolo: () => void;
+  onRejoin: (session: ClientSession) => void;
   onOpen: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
-export function Home({ games, onNew, onOpen, onDelete }: Props) {
+export function Home({ games, clientSession, onHost, onJoin, onSolo, onRejoin, onOpen, onDelete }: Props) {
   return (
     <div className="page">
       <header className="hero">
-        <img src="/mars.svg" alt="" className="hero-logo" />
+        <img src={`${import.meta.env.BASE_URL}mars.svg`} alt="" className="hero-logo" />
         <div>
           <h1>TM Companion</h1>
           <p className="muted">Recursos, producción y terraformación de tu partida de Terraforming Mars.</p>
         </div>
       </header>
 
-      <button className="btn primary block" onClick={onNew}>
-        + Nueva partida
-      </button>
+      <div className="home-actions">
+        <button className="btn primary block" onClick={onHost}>
+          <IconWifi size={18} /> Crear partida online
+        </button>
+        <button className="btn block" onClick={onJoin}>
+          <IconLogin size={18} /> Unirme con un código
+        </button>
+        <button className="btn ghost block" onClick={onSolo}>
+          <IconUser size={18} /> Partida solitaria (sin conexión)
+        </button>
+      </div>
+
+      {clientSession && (
+        <button className="game-open rejoin" onClick={() => onRejoin(clientSession)}>
+          <IconDeviceMobile size={20} aria-hidden />
+          <span className="grow">
+            <strong>Volver a {clientSession.name}</strong>
+            <small className="muted">Partida online · código {clientSession.code}</small>
+          </span>
+        </button>
+      )}
 
       <h2 className="section-title">Partidas guardadas</h2>
       {games.length === 0 ? (
-        <p className="empty">Todavía no hay partidas. Creá una para empezar.</p>
+        <p className="empty">Todavía no hay partidas en este celular.</p>
       ) : (
         <ul className="game-list">
           {games.map((g) => (
@@ -35,7 +59,8 @@ export function Home({ games, onNew, onOpen, onDelete }: Props) {
               <button className="game-open" onClick={() => onOpen(g.id)}>
                 <div className="game-name">{g.name}</div>
                 <div className="game-meta">
-                  Generación {g.generation}
+                  {g.online ? `Online · sos el anfitrión · código ${g.online.code}` : 'Sin conexión'} · Generación{' '}
+                  {g.generation}
                   {g.phase === 'finished' ? ' · Finalizada' : isTerraformed(g) ? ' · Marte terraformado' : ''} ·{' '}
                   {new Date(g.updatedAt).toLocaleDateString()}
                 </div>

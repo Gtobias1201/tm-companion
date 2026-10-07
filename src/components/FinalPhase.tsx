@@ -9,7 +9,15 @@ import { ScoreCounters } from './ScoreCounters';
 interface Props {
   game: Game;
   dispatch: (action: Action) => void;
+  /** Online: jugador de este celular (solo controla lo suyo). */
+  me?: string;
+  /** Online: solo el anfitrión avanza de paso. */
+  isHost?: boolean;
 }
+
+/** En local se controla todo; online, solo el propio jugador. */
+const controls = (me: string | undefined, playerId: string) => !me || me === playerId;
+const canAdvance = (me: string | undefined, isHost: boolean | undefined) => !me || !!isHost;
 
 const STEPS = [
   { phase: 'finalGreenery', label: 'Bosques finales' },
@@ -17,7 +25,7 @@ const STEPS = [
   { phase: 'finished', label: 'Resultado' },
 ] as const;
 
-export function FinalPhase({ game, dispatch }: Props) {
+export function FinalPhase({ game, dispatch, me, isHost }: Props) {
   const step = STEPS.findIndex((s) => s.phase === game.phase);
 
   return (
@@ -30,8 +38,8 @@ export function FinalPhase({ game, dispatch }: Props) {
         ))}
       </ol>
 
-      {game.phase === 'finalGreenery' && <FinalGreenery game={game} dispatch={dispatch} />}
-      {game.phase === 'scoring' && <Scoring game={game} dispatch={dispatch} />}
+      {game.phase === 'finalGreenery' && <FinalGreenery game={game} dispatch={dispatch} me={me} isHost={isHost} />}
+      {game.phase === 'scoring' && <Scoring game={game} dispatch={dispatch} me={me} isHost={isHost} />}
       {game.phase === 'finished' && <Result game={game} />}
     </div>
   );
@@ -43,7 +51,7 @@ function turnOrder(game: Game): Player[] {
   return game.players.map((_, i) => game.players[(start + i) % game.players.length]);
 }
 
-function FinalGreenery({ game, dispatch }: Props) {
+function FinalGreenery({ game, dispatch, me, isHost }: Props) {
   return (
     <>
       <p className="note">
@@ -52,6 +60,7 @@ function FinalGreenery({ game, dispatch }: Props) {
       <section className="final-card">
         {turnOrder(game).map((p) => {
           const possible = Math.floor(p.resources.plants / p.greeneryCost);
+          const mine = controls(me, p.id);
           return (
             <div key={p.id} className="final-row" style={{ '--p-color': colorHex(p.color) } as CSSProperties}>
               <div className="grow">
@@ -59,47 +68,58 @@ function FinalGreenery({ game, dispatch }: Props) {
                   <span className="dot" /> {p.name}
                 </strong>
                 <small className="muted">
-                  {p.resources.plants} plantas · {p.score.greeneries} bosques ·{' '}
-                  {possible > 0 ? `puede hacer ${possible} más` : 'no le alcanzan las plantas'}
+                  {mine
+                    ? `${p.resources.plants} plantas · ${p.score.greeneries} bosques · ${
+                        possible > 0 ? `puede hacer ${possible} más` : 'no le alcanzan las plantas'
+                      }`
+                    : `${p.score.greeneries} bosques`}
                 </small>
               </div>
               {/* Para corregir plantas que no se cargaron durante la partida */}
-              <div className="stepper">
+              {mine && (
+                <div className="stepper">
+                  <button
+                    className="step mini"
+                    disabled={p.resources.plants <= 0}
+                    onClick={() => dispatch({ type: 'resource', playerId: p.id, key: 'plants', delta: -1 })}
+                    aria-label={`Restar plantas de ${p.name}`}
+                  >
+                    −
+                  </button>
+                  <button
+                    className="step mini"
+                    onClick={() => dispatch({ type: 'resource', playerId: p.id, key: 'plants', delta: 1 })}
+                    aria-label={`Sumar plantas de ${p.name}`}
+                  >
+                    +
+                  </button>
+                </div>
+              )}
+              {mine && (
                 <button
-                  className="step mini"
-                  disabled={p.resources.plants <= 0}
-                  onClick={() => dispatch({ type: 'resource', playerId: p.id, key: 'plants', delta: -1 })}
-                  aria-label={`Restar plantas de ${p.name}`}
+                  className="btn small"
+                  disabled={possible === 0}
+                  onClick={() => dispatch({ type: 'finalGreenery', playerId: p.id })}
                 >
-                  −
+                  <IconTrees size={16} /> −{p.greeneryCost}
                 </button>
-                <button
-                  className="step mini"
-                  onClick={() => dispatch({ type: 'resource', playerId: p.id, key: 'plants', delta: 1 })}
-                  aria-label={`Sumar plantas de ${p.name}`}
-                >
-                  +
-                </button>
-              </div>
-              <button
-                className="btn small"
-                disabled={possible === 0}
-                onClick={() => dispatch({ type: 'finalGreenery', playerId: p.id })}
-              >
-                <IconTrees size={16} /> −{p.greeneryCost}
-              </button>
+              )}
             </div>
           );
         })}
       </section>
-      <button className="btn primary block" onClick={() => dispatch({ type: 'advancePhase' })}>
-        Continuar a la puntuación
-      </button>
+      {canAdvance(me, isHost) ? (
+        <button className="btn primary block" onClick={() => dispatch({ type: 'advancePhase' })}>
+          Continuar a la puntuación
+        </button>
+      ) : (
+        <p className="note">El anfitrión pasa a la puntuación cuando todos terminen sus bosques.</p>
+      )}
     </>
   );
 }
 
-function Scoring({ game, dispatch }: Props) {
+function Scoring({ game, dispatch, me, isHost }: Props) {
   const results = awardResults(game);
   const nameOf = (id: string) => game.players.find((p) => p.id === id)?.name ?? '';
   const incomplete = results.some((r) => !r.complete);
@@ -117,9 +137,9 @@ function Scoring({ game, dispatch }: Props) {
               </div>
               <div className="award-values">
                 {game.players.map((p) =>
-                  r.award.metric ? (
+                  r.award.metric || !controls(me, p.id) ? (
                     <span key={p.id} className="award-value">
-                      {p.name}: <strong>{r.values[p.id]}</strong>
+                      {p.name}: <strong>{r.values[p.id] ?? '…'}</strong>
                     </span>
                   ) : (
                     <label key={p.id} className="award-input">
@@ -159,7 +179,7 @@ function Scoring({ game, dispatch }: Props) {
         </section>
       )}
 
-      {game.players.map((p) => (
+      {game.players.filter((p) => controls(me, p.id)).map((p) => (
         <section key={p.id} className="score-counters" style={{ '--p-color': colorHex(p.color) } as CSSProperties}>
           <h2 className="final-name">
             <span className="dot" /> {p.name}
@@ -174,14 +194,22 @@ function Scoring({ game, dispatch }: Props) {
 
       <ResultTable game={game} />
 
-      <button
-        className="btn primary block"
-        disabled={incomplete}
-        onClick={() => dispatch({ type: 'advancePhase' })}
-      >
-        Terminar partida
-      </button>
-      {incomplete && <p className="note">Completá los valores de los premios para terminar.</p>}
+      {canAdvance(me, isHost) ? (
+        <>
+          <button
+            className="btn primary block"
+            disabled={incomplete}
+            onClick={() => dispatch({ type: 'advancePhase' })}
+          >
+            Terminar partida
+          </button>
+          {incomplete && <p className="note">Completá los valores de los premios para terminar.</p>}
+        </>
+      ) : (
+        <p className="note">
+          Completá tus valores y tus puntos. El anfitrión termina la partida cuando todos estén listos.
+        </p>
+      )}
     </>
   );
 }

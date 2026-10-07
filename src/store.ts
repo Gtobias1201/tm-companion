@@ -13,6 +13,8 @@ export interface AppState {
 
 export type AppAction =
   | { type: 'create'; game: Game }
+  /** Guarda una partida sin abrirla ni tocar el deshacer (la usa el celular anfitrión). */
+  | { type: 'save'; game: Game }
   | { type: 'open'; id: string }
   | { type: 'close' }
   | { type: 'delete'; id: string }
@@ -47,6 +49,9 @@ export function appReducer(s: AppState, a: AppAction): AppState {
   switch (a.type) {
     case 'create':
       return { ...s, games: { ...s.games, [a.game.id]: a.game }, currentId: a.game.id };
+
+    case 'save':
+      return { ...s, games: { ...s.games, [a.game.id]: a.game } };
 
     case 'open': {
       const game = s.games[a.id];

@@ -22,7 +22,7 @@ import {
   type AwardDef,
   type BoardId,
 } from './boards';
-import { CREDICOR_REBATE, findCorporation, findPrelude, type PreludeDef } from './catalog';
+import { CREDICOR_REBATE, PRELUDES_PER_PLAYER, findCorporation, findPrelude, type PreludeDef } from './catalog';
 import {
   RESOURCES,
   type CardTag,
@@ -67,6 +67,8 @@ export type Action =
   | { type: 'finalGreenery'; playerId: string }
   | { type: 'setAwardValue'; awardId: string; playerId: string; value: number }
   | { type: 'advancePhase' }
+  /** Investigación de un solo jugador desde su celular (modo online). */
+  | { type: 'researchBuy'; playerId: string; cards: number }
   | { type: 'addDiscount'; playerId: string; discount: Omit<Discount, 'id'> }
   | { type: 'removeDiscount'; playerId: string; discountId: string }
   | { type: 'registerAction'; playerId: string }
@@ -98,6 +100,28 @@ export interface GameSetup {
   venus: boolean;
   prelude: boolean;
   board: BoardId;
+}
+
+export const newPlayerSetup = (n: number, color: string): PlayerSetup => ({
+  name: `Jugador ${n}`,
+  color,
+  corporationId: null,
+  corporation: '',
+  startingMC: 0,
+  initialCards: 0,
+  preludes: [],
+});
+
+/** Problemas que impiden empezar la partida con este jugador. */
+export function setupProblems(s: PlayerSetup, withPreludes: boolean): string[] {
+  const problems: string[] = [];
+  const { afterCards, final } = setupBalance(s);
+  if (afterCards < 0) problems.push(`No le alcanzan los M€ para ${s.initialCards} cartas (faltan ${-afterCards}).`);
+  else if (withPreludes && final < 0) problems.push(`No le alcanzan los M€ para pagar los preludios (faltan ${-final}).`);
+  if (withPreludes && s.preludes.filter(Boolean).length < PRELUDES_PER_PLAYER) {
+    problems.push(`Elegí ${PRELUDES_PER_PLAYER} preludios.`);
+  }
+  return problems;
 }
 
 /**
@@ -203,6 +227,7 @@ export function createGame(setup: GameSetup): Game {
     awards: [],
     phase: 'playing',
     awardValues: {},
+    researchDone: [],
   };
   log(game, `Partida creada con ${players.length} jugador${players.length > 1 ? 'es' : ''}`);
   players.forEach((p, i) => applySetup(game, p, setup.players[i], setup.prelude));
@@ -430,6 +455,18 @@ function run(g: Game, a: Action): boolean {
       return true;
     }
 
+    case 'researchBuy': {
+      if (!g.researchPending || g.researchDone.includes(p.id)) return false;
+      const n = Math.round(a.cards);
+      if (n < 0 || n > maxCardsToBuy(p)) return false;
+      const cost = n * p.cardCost;
+      p.resources.megacredits -= cost;
+      g.researchDone.push(p.id);
+      log(g, `Investigación: ${p.name} ${n} carta${n === 1 ? '' : 's'}${n ? ` (−${cost} M€)` : ''}`);
+      if (g.players.every((x) => g.researchDone.includes(x.id))) g.researchPending = false;
+      return true;
+    }
+
     case 'finalGreenery': {
       if (g.phase !== 'finalGreenery' || p.resources.plants < p.greeneryCost) return false;
       p.resources.plants -= p.greeneryCost;
@@ -604,6 +641,7 @@ export function normalizeGame(g: Game): Game {
   g.awards ??= [];
   g.phase ??= 'playing';
   g.awardValues ??= {};
+  g.researchDone ??= [];
   return g;
 }
 
@@ -715,6 +753,7 @@ function productionPhase(g: Game): boolean {
   g.actionsThisGen = {};
   g.turnNotice = null;
   g.researchPending = true;
+  g.researchDone = [];
   return true;
 }
 

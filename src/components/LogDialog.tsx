@@ -1,10 +1,11 @@
+import type { ReactNode } from 'react';
 import type { Game } from '../game/types';
 import { Modal } from './Modal';
 
-export function LogDialog({ game, onClose }: { game: Game; onClose: () => void }) {
+export function LogDialog({ game, onClose, footer }: { game: Game; onClose: () => void; footer?: ReactNode }) {
   const entries = [...game.log].reverse();
   return (
-    <Modal title="Registro" onClose={onClose}>
+    <Modal title="Registro" onClose={onClose} footer={footer}>
       {entries.length === 0 ? (
         <p className="empty">Sin movimientos todavía.</p>
       ) : (

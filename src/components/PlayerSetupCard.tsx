@@ -10,7 +10,7 @@ import {
   findPrelude,
 } from '../game/catalog';
 import { DISCOUNT_CARDS, scopeLabel } from '../game/constants';
-import { setupBalance, type PlayerSetup } from '../game/logic';
+import { setupBalance, setupProblems, type PlayerSetup } from '../game/logic';
 import { ColorPicker } from './ColorPicker';
 
 interface Props {
@@ -26,18 +26,6 @@ interface Props {
 }
 
 const MANUAL = '';
-
-/** Problemas que impiden empezar la partida con este jugador. */
-export function setupProblems(s: PlayerSetup, withPreludes: boolean): string[] {
-  const problems: string[] = [];
-  const { afterCards, final } = setupBalance(s);
-  if (afterCards < 0) problems.push(`No le alcanzan los M€ para ${s.initialCards} cartas (faltan ${-afterCards}).`);
-  else if (withPreludes && final < 0) problems.push(`No le alcanzan los M€ para pagar los preludios (faltan ${-final}).`);
-  if (withPreludes && s.preludes.filter(Boolean).length < PRELUDES_PER_PLAYER) {
-    problems.push(`Elegí ${PRELUDES_PER_PLAYER} preludios.`);
-  }
-  return problems;
-}
 
 export function PlayerSetupCard({
   setup,

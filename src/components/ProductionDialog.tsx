@@ -8,11 +8,14 @@ interface Props {
   game: Game;
   /** Última generación: después de esta producción termina la partida. */
   final?: boolean;
+  /** Online: cada celular ve solo su propia producción. */
+  onlyPlayerId?: string;
   onConfirm: () => void;
   onClose: () => void;
 }
 
-export function ProductionDialog({ game, final, onConfirm, onClose }: Props) {
+export function ProductionDialog({ game, final, onlyPlayerId, onConfirm, onClose }: Props) {
+  const players = onlyPlayerId ? game.players.filter((p) => p.id === onlyPlayerId) : game.players;
   return (
     <Modal
       title={final ? `Producción final · generación ${game.generation}` : `Fin de la generación ${game.generation}`}
@@ -32,7 +35,7 @@ export function ProductionDialog({ game, final, onConfirm, onClose }: Props) {
         La energía sobrante se convierte en calor y cada jugador recibe M€ igual a su TR + producción de M€.
       </p>
       <div className="prod-summary">
-        {game.players.map((p) => {
+        {players.map((p) => {
           const gains = productionPreview(p);
           return (
             <div key={p.id} className="prod-player">

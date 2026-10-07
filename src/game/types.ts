@@ -141,4 +141,15 @@ export interface Game {
   phase: GamePhase;
   /** Valores informados por los jugadores para premios que la app no puede medir. */
   awardValues: Record<string, Record<string, number>>;
+  /** Jugadores que ya compraron sus cartas en la investigación pendiente (modo online). */
+  researchDone: string[];
+  /** Solo en partidas online, guardado en el celular anfitrión. */
+  online?: OnlineInfo;
+}
+
+export interface OnlineInfo {
+  /** Código de invitación. */
+  code: string;
+  /** Qué jugador es cada celular: clientId → playerId. */
+  members: Record<string, string>;
 }

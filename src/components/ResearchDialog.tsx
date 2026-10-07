@@ -6,15 +6,18 @@ import { Modal } from './Modal';
 
 interface Props {
   game: Game;
+  /** Online: cada celular compra solo sus cartas. */
+  onlyPlayerId?: string;
   onConfirm: (purchases: Record<string, number>) => void;
   onClose: () => void;
 }
 
 const OPTIONS = Array.from({ length: RESEARCH_CARDS + 1 }, (_, i) => i);
 
-export function ResearchDialog({ game, onConfirm, onClose }: Props) {
+export function ResearchDialog({ game, onlyPlayerId, onConfirm, onClose }: Props) {
   const [purchases, setPurchases] = useState<Record<string, number>>({});
-  const total = game.players.reduce((sum, p) => sum + (purchases[p.id] ?? 0) * p.cardCost, 0);
+  const players = onlyPlayerId ? game.players.filter((p) => p.id === onlyPlayerId) : game.players;
+  const total = players.reduce((sum, p) => sum + (purchases[p.id] ?? 0) * p.cardCost, 0);
 
   return (
     <Modal
@@ -27,11 +30,14 @@ export function ResearchDialog({ game, onConfirm, onClose }: Props) {
       }
     >
       <p className="muted">
-        Cada jugador roba {RESEARCH_CARDS} cartas y elige cuántas se queda. Se descuentan los M€ al confirmar.
+        {onlyPlayerId
+          ? `Robás ${RESEARCH_CARDS} cartas y elegís cuántas te quedás.`
+          : `Cada jugador roba ${RESEARCH_CARDS} cartas y elige cuántas se queda.`}{' '}
+        Se descuentan los M€ al confirmar.
       </p>
 
       <div className="research-list">
-        {game.players.map((p) => {
+        {players.map((p) => {
           const n = purchases[p.id] ?? 0;
           const max = maxCardsToBuy(p);
           return (

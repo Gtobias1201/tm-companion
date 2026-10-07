@@ -1,56 +1,34 @@
 import { IconArrowLeft } from '@tabler/icons-react';
 import { useState, type FormEvent } from 'react';
 import { BOARDS, type BoardId } from '../game/boards';
-import { PLAYER_COLORS } from '../game/constants';
-import { createGame, type PlayerSetup } from '../game/logic';
+import { createGame, newPlayerSetup, setupProblems, type PlayerSetup } from '../game/logic';
 import type { Game } from '../game/types';
-import { PlayerSetupCard, setupProblems } from './PlayerSetupCard';
+import { PlayerSetupCard } from './PlayerSetupCard';
 
 interface Props {
   onCreate: (game: Game) => void;
   onCancel: () => void;
 }
 
-const MAX_PLAYERS = 5;
-
 const defaultName = () =>
   `Partida ${new Date().toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}`;
 
-const newPlayer = (n: number, color: string): PlayerSetup => ({
-  name: `Jugador ${n}`,
-  color,
-  corporationId: null,
-  corporation: '',
-  startingMC: 0,
-  initialCards: 0,
-  preludes: [],
-});
-
+/** Partida solitaria, sin conexión. Las partidas de varios jugadores se arman online. */
 export function NewGame({ onCreate, onCancel }: Props) {
   const [name, setName] = useState(defaultName);
-  const [players, setPlayers] = useState<PlayerSetup[]>([newPlayer(1, 'red'), newPlayer(2, 'green')]);
+  const [player, setPlayer] = useState<PlayerSetup>(() => ({ ...newPlayerSetup(1, 'red'), name: 'Yo' }));
   const [corporateEra, setCorporateEra] = useState(true);
   const [venus, setVenus] = useState(false);
   const [prelude, setPrelude] = useState(false);
   const [board, setBoard] = useState<BoardId>('tharsis');
   const selectedBoard = BOARDS.find((b) => b.id === board)!;
 
-  const update = (i: number, patch: Partial<PlayerSetup>) =>
-    setPlayers((ps) => ps.map((p, j) => (j === i ? { ...p, ...patch } : p)));
-
-  const addPlayer = () =>
-    setPlayers((ps) => {
-      const used = new Set(ps.map((p) => p.color));
-      const color = PLAYER_COLORS.find((c) => !used.has(c.id))?.id ?? 'red';
-      return [...ps, newPlayer(ps.length + 1, color)];
-    });
-
-  const hasProblems = players.some((p) => setupProblems(p, prelude).length > 0);
+  const hasProblems = setupProblems(player, prelude).length > 0;
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (hasProblems) return;
-    onCreate(createGame({ name, players, corporateEra, venus, prelude, board }));
+    onCreate(createGame({ name, players: [player], corporateEra, venus, prelude, board }));
   };
 
   return (
@@ -59,7 +37,7 @@ export function NewGame({ onCreate, onCancel }: Props) {
         <button type="button" className="icon-btn" onClick={onCancel} aria-label="Volver">
           <IconArrowLeft size={20} />
         </button>
-        <h1>Nueva partida</h1>
+        <h1>Partida solitaria</h1>
       </header>
 
       <label className="field">
@@ -111,41 +89,23 @@ export function NewGame({ onCreate, onCancel }: Props) {
         </span>
       </label>
 
-      <h2 className="section-title">
-        Jugadores <span className="muted">({players.length}/{MAX_PLAYERS})</span>
-      </h2>
-
-      {players.map((p, i) => {
-        const others = players.filter((_, j) => j !== i);
-        return (
-          <PlayerSetupCard
-            key={i}
-            setup={p}
-            index={i}
-            withPreludes={prelude}
-            takenCorporations={new Set(others.map((o) => o.corporationId).filter((id): id is string => !!id))}
-            takenPreludes={new Set(others.flatMap((o) => o.preludes).filter(Boolean))}
-            canRemove={players.length > 1}
-            onChange={(patch) => update(i, patch)}
-            onRemove={() => setPlayers((ps) => ps.filter((_, j) => j !== i))}
-          />
-        );
-      })}
-
-      {players.length < MAX_PLAYERS && (
-        <button type="button" className="btn ghost block" onClick={addPlayer}>
-          + Agregar jugador
-        </button>
-      )}
-
-      {players.length === 1 && (
-        <p className="note">Modo solitario: empezás con 14 TR y tenés 14 generaciones para terraformar Marte.</p>
-      )}
+      <h2 className="section-title">Tu jugador</h2>
+      <PlayerSetupCard
+        setup={player}
+        index={0}
+        withPreludes={prelude}
+        takenCorporations={new Set()}
+        takenPreludes={new Set()}
+        canRemove={false}
+        onChange={(patch) => setPlayer((p) => ({ ...p, ...patch }))}
+        onRemove={() => undefined}
+      />
+      <p className="note">Empezás con 14 TR y tenés 14 generaciones para terraformar Marte.</p>
 
       <button type="submit" className="btn primary block" disabled={hasProblems}>
         Empezar partida
       </button>
-      {hasProblems && <p className="note">Revisá los avisos en rojo de cada jugador para poder empezar.</p>}
+      {hasProblems && <p className="note">Revisá los avisos en rojo para poder empezar.</p>}
     </form>
   );
 }
