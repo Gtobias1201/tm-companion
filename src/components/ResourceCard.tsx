@@ -8,8 +8,8 @@ interface Props {
   stock: number;
   production: number;
   productionMin: number;
-  /** Texto chico bajo el nombre, p. ej. "vale 2 M€". */
-  note?: string;
+  /** Valor en M€ (acero y titanio), como el "= 2" del tablero. */
+  worth?: number;
   /** Conversión propia del recurso (bosque, temperatura...), como en el tablero. */
   action?: ReactNode;
   onStock: (delta: number) => void;
@@ -17,12 +17,16 @@ interface Props {
   onOpenAmount: () => void;
 }
 
+/**
+ * Tarjeta de recurso: la franja de color lleva el ícono y la producción con sus − / +;
+ * debajo, el stock grande. Sin nombre visible: se reconoce por color e ícono, como en el tablero.
+ */
 export function ResourceCard({
   resource,
   stock,
   production,
   productionMin,
-  note,
+  worth,
   action,
   onStock,
   onProduction,
@@ -30,15 +34,31 @@ export function ResourceCard({
 }: Props) {
   const info = RESOURCE_INFO[resource];
   return (
-    <div className={`res-card res-${resource}`}>
-      <div className="res-head">
-        <span className="res-icon">
+    <div className={`res-card res-${resource}`} role="group" aria-label={info.label}>
+      <div className="res-band">
+        <span className="res-band-icon">
           <ResourceIcon resource={resource} size={18} />
+          {worth !== undefined && (
+            <span className="res-worth" aria-label={`vale ${worth} M€`}>
+              ={worth}
+            </span>
+          )}
         </span>
-        <span className="res-label">
-          {/* El ícono ya dice M€: nombre corto para que entre a 3 columnas */}
-          {resource === 'megacredits' ? 'Créditos' : info.label}
-          {note && <small>{note}</small>}
+        <span className="res-prod">
+          <button
+            className="res-prod-step"
+            disabled={production <= productionMin}
+            onClick={() => onProduction(-1)}
+            aria-label={`Restar producción de ${info.label}`}
+          >
+            −
+          </button>
+          <span className={`res-prod-value ${production < 0 ? 'neg' : ''}`} aria-label={`Producción ${production}`}>
+            {production > 0 ? `+${production}` : production}
+          </span>
+          <button className="res-prod-step" onClick={() => onProduction(1)} aria-label={`Sumar producción de ${info.label}`}>
+            +
+          </button>
         </span>
       </div>
 
@@ -50,24 +70,6 @@ export function ResourceCard({
           {stock}
         </button>
         <button className="step" onClick={() => onStock(1)} aria-label={`Sumar ${info.label}`}>
-          +
-        </button>
-      </div>
-
-      <div className="res-prod">
-        <span className="res-prod-label">Prod.</span>
-        <button
-          className="step mini"
-          disabled={production <= productionMin}
-          onClick={() => onProduction(-1)}
-          aria-label={`Restar producción de ${info.label}`}
-        >
-          −
-        </button>
-        <span className={`res-prod-value ${production < 0 ? 'neg' : ''}`}>
-          {production > 0 ? `+${production}` : production}
-        </span>
-        <button className="step mini" onClick={() => onProduction(1)} aria-label={`Sumar producción de ${info.label}`}>
           +
         </button>
       </div>

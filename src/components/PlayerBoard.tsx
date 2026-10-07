@@ -1,4 +1,11 @@
-import { IconArrowRight, IconCreditCard, IconPencil, IconTemperature, IconTrees } from '@tabler/icons-react';
+import {
+  IconArrowRight,
+  IconCreditCard,
+  IconFlame,
+  IconPencil,
+  IconTemperature,
+  IconTrees,
+} from '@tabler/icons-react';
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { findCorporation } from '../game/catalog';
 import { GLOBAL_INFO, HEAT_PER_TEMPERATURE, LIMITS, colorHex } from '../game/constants';
@@ -31,9 +38,9 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
   // Pagar, bosque y temperatura son acciones: solo en el turno del jugador
   const canAct = isTurnOf(game, pid);
 
-  const notes: Partial<Record<ResourceKey, string>> = {
-    steel: `vale ${player.steelValue}`,
-    titanium: `vale ${player.titaniumValue}`,
+  const worth: Partial<Record<ResourceKey, number>> = {
+    steel: player.steelValue,
+    titanium: player.titaniumValue,
   };
   // Las conversiones van dentro de su recurso, como en el tablero físico
   const actions: Partial<Record<ResourceKey, ReactNode>> = {
@@ -53,9 +60,16 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
         <IconTrees size={14} aria-hidden /> {player.greeneryCost} → bosque
       </button>
     ),
+    // Flecha dorada como la del tablero: la energía que quede pasa a calor al producir
     energy: (
-      <span className="res-action hint-only">
-        <IconArrowRight size={14} aria-hidden /> a calor
+      <span
+        className="energy-flow"
+        role="img"
+        aria-label={`${player.resources.energy} de energía pasan a calor en la próxima producción`}
+      >
+        {player.resources.energy > 0 && player.resources.energy}
+        <IconFlame size={13} aria-hidden />
+        <IconArrowRight size={13} aria-hidden />
       </span>
     ),
     heat: (
@@ -105,7 +119,7 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
               stock={player.resources[k]}
               production={player.production[k]}
               productionMin={productionMin(k)}
-              note={notes[k]}
+              worth={worth[k]}
               action={actions[k]}
               onStock={(delta) => dispatch({ type: 'resource', playerId: pid, key: k, delta })}
               onProduction={(delta) => dispatch({ type: 'production', playerId: pid, key: k, delta })}
@@ -113,7 +127,7 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
             />
           ))}
         </div>
-        <p className="board-legend">Visor oscuro: stock · placa marrón: producción</p>
+        <p className="board-legend">Arriba, en la franja: producción · abajo: stock</p>
       </div>
 
       {sheet === 'megacredits' && (
