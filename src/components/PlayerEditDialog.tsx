@@ -1,5 +1,7 @@
+import { IconDeviceMobile, IconMoon, IconSun } from '@tabler/icons-react';
 import { useState } from 'react';
 import { DEFAULT_CARD_COST } from '../game/constants';
+import { useThemePref, type ThemePref } from '../theme';
 import type { PlayerPatch } from '../game/logic';
 import type { Player } from '../game/types';
 import { ColorPicker } from './ColorPicker';
@@ -11,7 +13,15 @@ interface Props {
   onClose: () => void;
 }
 
+const THEME_OPTIONS: { id: ThemePref; label: string; Icon: typeof IconSun }[] = [
+  { id: 'light', label: 'Día', Icon: IconSun },
+  { id: 'dark', label: 'Noche', Icon: IconMoon },
+  { id: 'auto', label: 'Auto', Icon: IconDeviceMobile },
+];
+
 export function PlayerEditDialog({ player, onSave, onClose }: Props) {
+  // La apariencia es del celular, no del jugador: se guarda aparte y no espera a "Guardar"
+  const [themePref, setThemePref] = useThemePref();
   const [name, setName] = useState(player.name);
   const [corporation, setCorporation] = useState(player.corporation);
   const [color, setColor] = useState(player.color);
@@ -95,6 +105,25 @@ export function PlayerEditDialog({ player, onSave, onClose }: Props) {
         />
         <small className="muted">3 normalmente · Polyphemos 5 · Terralabs 1</small>
       </label>
+
+      <div className="field">
+        <span>Apariencia en este celular</span>
+        <div className="segmented three" role="radiogroup" aria-label="Apariencia">
+          {THEME_OPTIONS.map((o) => (
+            <button
+              key={o.id}
+              type="button"
+              role="radio"
+              aria-checked={themePref === o.id}
+              className={themePref === o.id ? 'on' : ''}
+              onClick={() => setThemePref(o.id)}
+            >
+              <o.Icon size={16} aria-hidden /> {o.label}
+            </button>
+          ))}
+        </div>
+        <small className="muted">Se aplica al instante. "Automático" sigue el modo del celular.</small>
+      </div>
     </Modal>
   );
 }

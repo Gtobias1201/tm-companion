@@ -1,4 +1,5 @@
-/* Tema claro "Arena" por defecto; tema oscuro "Noche" según el sistema. */
+/* Modo día "Tablero clásico" y modo noche "Noche marciana". El modo se elige con
+   data-theme en <html> (automático según el celular o fijo desde la app: ver theme.ts). */
 :root {
   --bg: #f7f4ef;
   --surface: #ffffff;
@@ -28,6 +29,27 @@
   --c-ocean: #185fa5;
   --c-venus: #993556;
 
+  /* Tablero de recursos: placa marciana, tarjetas metálicas, visor y placa de producción */
+  --board: #3a2420;
+  --board-border: #5a1e17;
+  --board-legend: #d9c2ae;
+  --card: #cfd3d7;
+  --card-border: #a3a8ad;
+  --card-inner: #e8eaec;
+  --card-text: #3a2a1e;
+  --disp: #2b2320;
+  --disp-hover: #3a302c;
+  --disp-text: #fff3dc;
+  --prod: #8a5531;
+  --prod-step: #6b3f22;
+  --prod-step-text: #f3e2c8;
+  --prod-cell: #efe6d6;
+  --prod-cell-text: #3a2a1e;
+  /* Placas metálicas (generación, losetas) */
+  --plate: #d7dadd;
+  --plate-border: #9ea3a8;
+  --plate-text: #2b2b2b;
+
   --radius: 12px;
   --radius-sm: 8px;
   --tap: 44px;
@@ -36,37 +58,54 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1e2129;
-    --surface: #272b35;
-    --surface-2: #2f3440;
-    --border: #353a46;
-    --border-strong: #4a5160;
-    --text: #eceef2;
-    --muted: #9ba1ad;
-    --accent: #f0997b;
-    --accent-hover: #f5ad94;
-    --on-accent: #4a1b0c;
-    --accent-soft: #3a2f30;
-    --accent-text: #f5c4b3;
-    --danger: #f09595;
-    --success: #97c459;
-    --success-soft: #2c3527;
-    --overlay: rgba(10, 12, 16, 0.6);
+:root[data-theme='dark'] {
+  --bg: #1c1614;
+  --surface: #2a211e;
+  --surface-2: #332824;
+  --border: #3d302b;
+  --border-strong: #54443c;
+  --text: #f1e6dc;
+  --muted: #a8968a;
+  --accent: #f0997b;
+  --accent-hover: #f5ad94;
+  --on-accent: #3a1408;
+  --accent-soft: #3a2620;
+  --accent-text: #f5c4b3;
+  --danger: #f09595;
+  --success: #97c459;
+  --success-soft: #26301f;
+  --overlay: rgba(8, 5, 4, 0.6);
 
-    --c-mc: #fac775;
-    --c-steel: #d9b48f;
-    --c-titanium: #b8c4d4;
-    --c-plants: #97c459;
-    --c-energy: #afa9ec;
-    --c-heat: #f0997b;
-    --c-temp: #f0997b;
-    --c-oxygen: #97c459;
-    --c-ocean: #85b7eb;
-    --c-venus: #ed93b1;
-    color-scheme: dark;
-  }
+  --c-mc: #fac775;
+  --c-steel: #d9b48f;
+  --c-titanium: #b8c4d4;
+  --c-plants: #97c459;
+  --c-energy: #afa9ec;
+  --c-heat: #f0997b;
+  --c-temp: #f0997b;
+  --c-oxygen: #97c459;
+  --c-ocean: #85b7eb;
+  --c-venus: #ed93b1;
+
+  --board: #120d0c;
+  --board-border: #4a2a20;
+  --board-legend: #a8968a;
+  --card: #2f2825;
+  --card-border: #4d403a;
+  --card-inner: #3a312d;
+  --card-text: #f1e6dc;
+  --disp: #0e0b0a;
+  --disp-hover: #1d1715;
+  --disp-text: #ffd9b8;
+  --prod: #5a3a26;
+  --prod-step: #3f2818;
+  --prod-step-text: #f3d9c0;
+  --prod-cell: #3a2c24;
+  --prod-cell-text: #f3d9c0;
+  --plate: #3d302b;
+  --plate-border: #54443c;
+  --plate-text: #f1e6dc;
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -312,52 +351,58 @@ option, optgroup { background: var(--surface); color: var(--text); }
 
 /* ---------- Recursos con la estética del tablero de jugador ----------
    Colores fijos (no dependen del tema), como el cartón del tablero físico. */
-.board { background: #3a2420; border: 3px solid #5a1e17; border-radius: 14px; padding: 6px; }
+.board { background: var(--board); border: 3px solid var(--board-border); border-radius: 14px; padding: 6px; }
 /* 3×2 como el tablero físico: entra entero en la pantalla del celular */
 .res-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
-.board-legend { margin: 5px 2px 0; font-size: 0.68rem; color: #d9c2ae; text-align: center; }
+.board-legend { margin: 5px 2px 0; font-size: 0.68rem; color: var(--board-legend); text-align: center; }
 
 .res-card {
-  --tile: #888; --tile-fg: #fff; --head: #eee;
-  background: #cfd3d7; border: 2px solid #a3a8ad; border-radius: 8px;
-  box-shadow: inset 0 0 0 1px #e8eaec;
-  padding: 4px; display: flex; flex-direction: column; gap: 4px; color: #3a2a1e; min-width: 0;
+  --tile: #888; --tile-fg: #fff;
+  background: var(--card); border: 2px solid var(--card-border); border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--card-inner);
+  padding: 4px; display: flex; flex-direction: column; gap: 4px; color: var(--card-text); min-width: 0;
 }
-.res-megacredits { --tile: #f6c443; --tile-fg: #7a4b00; --head: #fbefd0; }
-.res-steel { --tile: #9a6033; --tile-fg: #fff1e0; --head: #efe0cf; }
-.res-titanium { --tile: #2f3236; --tile-fg: #f6c443; --head: #dfe2e6; }
-.res-plants { --tile: #5fae3a; --tile-fg: #173404; --head: #e3f0d2; }
-.res-energy { --tile: #7b2fa0; --tile-fg: #ffffff; --head: #ece0f6; }
-.res-heat { --tile: #e0482a; --tile-fg: #ffe066; --head: #fbe0d6; }
+.res-megacredits { --tile: #f6c443; --tile-fg: #7a4b00; }
+.res-steel { --tile: #9a6033; --tile-fg: #fff1e0; }
+.res-titanium { --tile: #2f3236; --tile-fg: #f6c443; }
+.res-plants { --tile: #5fae3a; --tile-fg: #173404; }
+.res-energy { --tile: #7b2fa0; --tile-fg: #ffffff; }
+.res-heat { --tile: #e0482a; --tile-fg: #ffe066; }
 
-.res-head { display: flex; align-items: center; gap: 5px; background: var(--head); border-radius: 5px; padding: 3px; min-width: 0; }
+/* Ícono como franja de color a todo el ancho, como la ilustración de cada recurso del tablero */
+.res-head { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .res-card .res-icon {
-  width: 24px; height: 24px; border-radius: 5px; flex-shrink: 0;
+  width: 100%; height: 30px; border-radius: 5px;
   display: grid; place-items: center;
   background: var(--tile); color: var(--tile-fg); border: 1.5px solid rgba(0, 0, 0, 0.25);
 }
-.res-card .res-icon svg { width: 15px; height: 15px; }
-.mc-glyph { font-weight: 700; font-size: 0.62rem; letter-spacing: -0.02em; }
-.res-label { display: flex; flex-direction: column; min-width: 0; font-weight: 600; font-size: 0.72rem; line-height: 1.1; }
-.res-label small { font-weight: 400; font-size: 0.62rem; opacity: 0.75; }
+.res-card .res-icon svg { width: 20px; height: 20px; }
+.mc-glyph { font-weight: 700; font-size: 0.7rem; letter-spacing: -0.02em; }
+.res-card .mc-glyph { font-size: 0.95rem; }
+.res-label {
+  display: block; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  font-weight: 600; font-size: 0.7rem; line-height: 1.2;
+}
+.res-label small { font-weight: 400; opacity: 0.75; }
+.res-label small::before { content: ' · '; }
 
 /* Stock: visor oscuro */
 .res-stock { display: flex; align-items: center; gap: 3px; }
-.res-card .res-stock .step { width: 24px; height: 34px; font-size: 1rem; border-radius: 5px; background: #2b2320; border-color: #2b2320; color: #fff3dc; }
+.res-card .res-stock .step { width: 24px; height: 34px; font-size: 1rem; border-radius: 5px; background: var(--disp); border-color: var(--disp); color: var(--disp-text); }
 .res-value {
   flex: 1; min-width: 0; height: 34px; padding: 0; border: none; border-radius: 5px; cursor: pointer;
-  background: #2b2320; color: #fff3dc;
+  background: var(--disp); color: var(--disp-text);
   font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums;
 }
-.res-value:hover { background: #3a302c; }
+.res-value:hover { background: var(--disp-hover); }
 
 /* Producción: placa marrón con casilla crema */
-.res-prod { display: flex; align-items: center; justify-content: space-between; gap: 3px; background: #8a5531; border-radius: 5px; padding: 3px; }
+.res-prod { display: flex; align-items: center; justify-content: space-between; gap: 3px; background: var(--prod); border-radius: 5px; padding: 3px; }
 .res-prod-label { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
-.res-card .res-prod .step.mini { width: 24px; height: 24px; font-size: 0.95rem; background: #6b3f22; border-color: #6b3f22; color: #f3e2c8; }
+.res-card .res-prod .step.mini { width: 24px; height: 24px; font-size: 0.95rem; background: var(--prod-step); border-color: var(--prod-step); color: var(--prod-step-text); }
 .res-prod-value {
   flex: 1; height: 24px; display: grid; place-items: center;
-  background: #efe6d6; color: #3a2a1e; border-radius: 4px;
+  background: var(--prod-cell); color: var(--prod-cell-text); border-radius: 4px;
   font-weight: 700; font-size: 0.85rem; font-variant-numeric: tabular-nums;
 }
 .res-prod-value.neg { color: #a32d2d; }
@@ -521,7 +566,7 @@ option, optgroup { background: var(--surface); color: var(--text); }
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   min-width: 52px; height: var(--tap); padding: 0 8px;
   /* Placa metálica, como las del tablero */
-  border-radius: 8px; background: #d7dadd; color: #2b2b2b; border: 2px solid #9ea3a8;
+  border-radius: 8px; background: var(--plate); color: var(--plate-text); border: 2px solid var(--plate-border);
   line-height: 1;
 }
 .gen-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -797,7 +842,7 @@ option, optgroup { background: var(--surface); color: var(--text); }
 .tile-btn {
   position: relative; flex-shrink: 0; cursor: pointer;
   width: 42px; height: 34px; display: grid; place-items: center;
-  background: #d7dadd; border: 2px solid #9ea3a8; border-radius: 7px;
+  background: var(--plate); border: 2px solid var(--plate-border); border-radius: 7px;
 }
 .tile-btn-plus {
   position: absolute; top: -7px; right: -7px;
