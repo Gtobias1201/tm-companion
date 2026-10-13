@@ -53,13 +53,30 @@ export interface Lobby {
   seats: LobbySeat[];
 }
 
+/** Latido: cada lado manda uno cada tanto para detectar conexiones muertas aunque nadie toque nada. */
+export const HEARTBEAT_MS = 2000;
+/** Sin noticias del otro lado durante este tiempo, la conexión se da por perdida. */
+export const DEAD_AFTER_MS = 7000;
+
 export type ClientMessage =
   | { t: 'hello'; clientId: string }
   | { t: 'seat'; setup: PlayerSetup; ready: boolean }
-  | { t: 'action'; action: Action }
-  | { t: 'undo' };
+  /** seq crece con cada envío: el anfitrión descarta los repetidos al reenviar tras un corte. */
+  | { t: 'action'; action: Action; seq: number }
+  | { t: 'undo'; seq: number }
+  | { t: 'ping' };
 
 export type HostMessage =
   | { t: 'lobby'; lobby: Lobby }
-  | { t: 'state'; game: Game; playerId: string; canUndo: boolean }
-  | { t: 'error'; message: string };
+  | {
+      t: 'state';
+      game: Game;
+      playerId: string;
+      canUndo: boolean;
+      /** Último seq de este celular que el anfitrión ya aplicó. */
+      ack: number;
+      /** Jugadores (playerId) con el celular conectado en este momento, anfitrión incluido. */
+      online: string[];
+    }
+  | { t: 'error'; message: string }
+  | { t: 'ping' };

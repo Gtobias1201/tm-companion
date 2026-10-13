@@ -810,6 +810,19 @@ option, optgroup { background: var(--surface); color: var(--text); }
 .conn-badge.connecting i, .conn-badge.reconnecting i { background: var(--c-mc); animation: pulse 1.2s ease-in-out infinite; }
 .conn-badge.error i { background: var(--danger); }
 @keyframes pulse { 50% { opacity: 0.3; } }
+/* Cartel de conexión: arriba de todo y fijo, para que nadie juegue desconectado sin saberlo */
+.conn-alert {
+  position: sticky; top: 8px; z-index: 20;
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; border-radius: var(--radius);
+  background: color-mix(in srgb, var(--c-mc) 16%, var(--surface));
+  border: 1px solid var(--c-mc); color: var(--text);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 0.12);
+}
+.conn-alert > div { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.conn-alert small { color: var(--muted); }
+.conn-alert.lost { background: color-mix(in srgb, var(--danger) 14%, var(--surface)); border-color: var(--danger); }
+.conn-alert.lost > svg { color: var(--danger); }
 @media (prefers-reduced-motion: reduce) { .conn-badge i { animation: none !important; } }
 
 .code-input { font-size: 1.6rem !important; letter-spacing: 0.3em; text-transform: uppercase; text-align: center; font-weight: 600; }

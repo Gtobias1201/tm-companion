@@ -43,6 +43,8 @@ export interface OnlineView {
   me: string;
   isHost: boolean;
   status: ReactNode;
+  /** Cartel de conexión (este celular o algún jugador desconectado). */
+  alert?: ReactNode;
   /** Deshacer general del anfitrión (cualquier jugador). */
   canUndoAny?: boolean;
   onUndoAny?: () => void;
@@ -131,6 +133,7 @@ export function GameScreen({ game, canUndo, dispatch, onUndo, onExit, online }: 
           <IconHelp size={20} />
         </button>
       </header>
+      {online?.alert}
 
       {playing && isTerraformed(game) && (
         <div className="banner">

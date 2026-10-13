@@ -2,7 +2,7 @@ import { IconArrowLeft } from '@tabler/icons-react';
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import { GameScreen } from '../components/GameScreen';
 import { ClientController } from './clientController';
-import { ConnectionBadge } from './ConnectionBadge';
+import { ConnectionAlert, ConnectionBadge } from './ConnectionBadge';
 import { LobbyView } from './LobbyView';
 import { clearClientSession } from './session';
 import { useWakeLock } from './useWakeLock';
@@ -59,6 +59,7 @@ export function OnlineClient({ code, clientId, onExit }: Props) {
   }
 
   if (snap.game && snap.me) {
+    const offline = snap.game.players.filter((p) => p.id !== snap.me && !snap.online.includes(p.id)).map((p) => p.name);
     return (
       <GameScreen
         game={snap.game}
@@ -66,7 +67,19 @@ export function OnlineClient({ code, clientId, onExit }: Props) {
         dispatch={controller.dispatch}
         onUndo={controller.undo}
         onExit={onExit}
-        online={{ me: snap.me, isHost: false, status }}
+        online={{
+          me: snap.me,
+          isHost: false,
+          status,
+          alert: (
+            <ConnectionAlert
+              lost={snap.status !== 'online'}
+              detail={snap.statusDetail}
+              pending={snap.pending}
+              offline={offline}
+            />
+          ),
+        }}
       />
     );
   }
