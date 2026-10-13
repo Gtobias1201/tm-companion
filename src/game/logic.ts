@@ -110,7 +110,7 @@ export interface GameSetup {
 export const newPlayerSetup = (n: number, color: string): PlayerSetup => ({
   name: `Jugador ${n}`,
   color,
-  corporationId: null,
+  corporationId: 'beginner',
   corporation: '',
   startingMC: 0,
   initialCards: 0,
