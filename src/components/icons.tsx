@@ -7,14 +7,37 @@ import {
   IconFlask,
   IconHammer,
   IconLeaf,
-  IconPlanet,
   IconRocket,
   IconTemperature,
   IconWind,
   IconWorld,
   type Icon,
 } from '@tabler/icons-react';
+import type { ComponentType } from 'react';
 import type { CardTag, GlobalKey, ResourceKey } from '../game/types';
+
+type IconComponent = Icon | ComponentType<{ size?: number; stroke?: number }>;
+
+/** Símbolo de Venus como en el juego: el medidor en arco con una V en el centro. */
+function IconVenus({ size = 24, stroke = 2 }: { size?: number; stroke?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={stroke}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M2 20a10 10 0 0 1 3.8 -7.9" />
+      <path d="M7.6 11a10 10 0 0 1 8.8 0" />
+      <path d="M18.2 12.1a10 10 0 0 1 3.8 7.9" />
+      <path d="M7 4.5l5 14l5 -14" />
+    </svg>
+  );
+}
 
 const RESOURCE_ICONS: Record<ResourceKey, Icon | null> = {
   megacredits: null,
@@ -25,20 +48,20 @@ const RESOURCE_ICONS: Record<ResourceKey, Icon | null> = {
   heat: IconFlame,
 };
 
-const GLOBAL_ICONS: Record<GlobalKey, Icon> = {
+const GLOBAL_ICONS: Record<GlobalKey, IconComponent> = {
   temperature: IconTemperature,
   oxygen: IconWind,
   oceans: IconDroplet,
-  venus: IconPlanet,
+  venus: IconVenus,
 };
 
-const TAG_ICONS: Record<CardTag, Icon> = {
+const TAG_ICONS: Record<CardTag, IconComponent> = {
   building: IconBuilding,
   space: IconRocket,
   earth: IconWorld,
   science: IconFlask,
   power: IconBolt,
-  venus: IconPlanet,
+  venus: IconVenus,
 };
 
 interface IconProps {
