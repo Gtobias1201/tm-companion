@@ -82,6 +82,7 @@ src/
 │   └── ui/              Piezas genéricas: modal, íconos, selector de color, gestos
 ├── net/             Mensajes y conexiones PeerJS (protocolo, latido, reconexión)
 ├── online/          Modo online: sala, anfitrión, invitado y su UI
+├── platform/        Lo que cambia entre navegador y app instalada (segundo plano, botón atrás)
 └── styles/          CSS por sección; index.css los importa en orden
 ```
 
@@ -117,12 +118,43 @@ Para agregar una regla nueva:
 En cada pull request corren tipos, formato, tests y build (`.github/workflows/ci.yml`). El despliegue
 a GitHub Pages también corre los tests antes de publicar.
 
-## Hacia el móvil
+## App de Android
 
-Cuando la app esté lista, se empaqueta con [Capacitor](https://capacitorjs.com/):
+La misma app web se empaqueta como app de Android con [Capacitor](https://capacitorjs.com/) (carpeta
+`android/`). Lo que suma la app instalada:
+
+- **Partida online en segundo plano**: mientras hay una partida online abierta, un servicio en primer
+  plano (`KeepAliveService`) mantiene viva la conexión con la pantalla apagada o usando otra app. Se ve
+  como un aviso fijo "Partida online en curso" que abre la app al tocarlo, y se apaga al salir de la
+  partida. La primera vez pide permiso para mostrar notificaciones y para usar la batería sin
+  restricciones.
+- **Botón atrás**: cierra el diálogo abierto o vuelve al inicio; en la partida manda la app al fondo
+  sin cortarla.
+- Pantalla completa de borde a borde, barra de estado del color del tema e ícono propio.
+- Los links de invitación apuntan a la versión web, así cualquiera puede unirse aunque no tenga la app.
+
+### Instalarla
+
+Cada merge a `main` compila el APK en GitHub (`.github/workflows/android.yml`) y lo publica en la
+release **android** del repositorio. Desde el celular: abrir la release, bajar `tm-companion.apk` e
+instalarlo (Android pide permitir apps de origen desconocido). Las versiones nuevas se instalan encima
+sin perder las partidas, porque todas se firman con la misma clave de prueba (`android/app/debug.keystore`).
+Para publicarla en Play Store hace falta una clave propia y justificar el permiso de batería.
+
+### Compilarla en la compu
+
+Requiere Android Studio (o el SDK de Android) y Java 21.
 
 ```bash
-npm install @capacitor/core @capacitor/cli @capacitor/android @capacitor/ios
-npx cap init "TM Companion" com.tmcompanion.app --web-dir dist
-npm run build && npx cap add android && npx cap open android
+npm run build && npx cap sync android   # copia la web a android/
+npx cap open android                    # abre el proyecto en Android Studio
 ```
+
+El código nativo propio está en `android/app/src/main/java/com/tmcompanion/app/` y la parte web que lo
+usa en `src/platform/`.
+
+### iPhone
+
+Todavía no. iOS no deja que una app siga con conexiones abiertas en segundo plano por más de unos
+segundos (salvo apps de llamadas, música o navegación), así que en iPhone la partida online seguiría
+necesitando la pantalla prendida.

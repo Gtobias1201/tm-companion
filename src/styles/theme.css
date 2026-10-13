@@ -126,9 +126,11 @@ strong { font-weight: 600; }
 .page {
   max-width: 720px;
   margin: 0 auto;
-  padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+  /* En la app instalada la página llega hasta debajo de la barra de estado y del recorte de la cámara */
+  padding: calc(16px + env(safe-area-inset-top)) calc(16px + env(safe-area-inset-right)) calc(24px + env(safe-area-inset-bottom))
+    calc(16px + env(safe-area-inset-left));
   display: flex;
   flex-direction: column;
   gap: 14px;
 }
-.page.game { gap: 8px; padding-top: 10px; padding-bottom: calc(84px + env(safe-area-inset-bottom)); }
+.page.game { gap: 8px; padding-top: calc(10px + env(safe-area-inset-top)); padding-bottom: calc(84px + env(safe-area-inset-bottom)); }

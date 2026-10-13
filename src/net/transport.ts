@@ -136,7 +136,8 @@ export class HostTransport {
       if (!clientId) return;
       const link = this.byClient.get(clientId);
       if (link?.conn === conn) link.lastSeen = Date.now();
-      if (msg.t !== 'ping') this.handlers.onMessage(clientId, msg);
+      if (msg.t === 'ping') conn.send({ t: 'pong' } satisfies HostMessage);
+      else if (msg.t !== 'pong') this.handlers.onMessage(clientId, msg);
     });
     const drop = () => {
       if (clientId && this.byClient.get(clientId)?.conn === conn) {
@@ -266,7 +267,8 @@ export class ClientTransport {
       if (this.conn !== conn) return;
       this.lastSeen = Date.now();
       const msg = data as HostMessage;
-      if (msg.t !== 'ping') this.handlers.onMessage(msg);
+      if (msg.t === 'ping') conn.send({ t: 'pong' } satisfies ClientMessage);
+      else if (msg.t !== 'pong') this.handlers.onMessage(msg);
     });
     const lost = () => {
       if (this.stopped || this.conn !== conn) return;

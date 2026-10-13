@@ -5,7 +5,7 @@ import { ClientController } from './clientController';
 import { ConnectionAlert, ConnectionBadge } from './ConnectionBadge';
 import { LobbyView } from './LobbyView';
 import { clearClientSession } from './session';
-import { useWakeLock } from './useWakeLock';
+import { useStayConnected } from '../platform/useStayConnected';
 
 interface Props {
   code: string;
@@ -20,7 +20,7 @@ export function OnlineClient({ code, clientId, onExit }: Props) {
     return () => controller.stop();
   }, [controller]);
   const snap = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
-  useWakeLock(true);
+  useStayConnected('Seguís conectado a la mesa aunque apagues la pantalla.');
 
   const status = <ConnectionBadge status={snap.status} />;
 

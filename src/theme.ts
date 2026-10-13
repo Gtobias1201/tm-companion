@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { setSystemBarsTheme } from './platform/setupNativeApp';
 
 /** Preferencia de tema de este celular: "auto" sigue al sistema. */
 export type ThemePref = 'auto' | 'light' | 'dark';
@@ -21,6 +22,7 @@ export function applyTheme(pref: ThemePref) {
   const mode = pref === 'auto' ? (darkMedia().matches ? 'dark' : 'light') : pref;
   document.documentElement.dataset.theme = mode;
   document.querySelector('meta[name="theme-color"]')?.setAttribute('content', BG[mode]);
+  setSystemBarsTheme(mode);
 }
 
 /** Aplica el tema guardado y, en automático, lo sigue cuando cambia el del celular. */

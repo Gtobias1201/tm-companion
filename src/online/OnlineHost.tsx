@@ -5,7 +5,7 @@ import { HOST_CLIENT_ID, newInviteCode } from '../net/protocol';
 import { ConnectionAlert, ConnectionBadge } from './ConnectionBadge';
 import { HostController, lobbyProblems } from './hostController';
 import { LobbyView } from './LobbyView';
-import { useWakeLock } from './useWakeLock';
+import { useStayConnected } from '../platform/useStayConnected';
 
 interface Props {
   /** Partida online ya empezada que este celular vuelve a hospedar. */
@@ -25,7 +25,7 @@ export function OnlineHost({ resume, onSave, onExit }: Props) {
     return () => controller.stop();
   }, [controller]);
   const snap = useSyncExternalStore(controller.subscribe, controller.getSnapshot);
-  useWakeLock(true);
+  useStayConnected('Sos el anfitrión: la mesa sigue jugando aunque apagues la pantalla.');
 
   const leave = () => {
     const message = snap.game
