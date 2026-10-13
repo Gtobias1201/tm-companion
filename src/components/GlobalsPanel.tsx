@@ -1,9 +1,10 @@
 import { IconPlus } from '@tabler/icons-react';
-import { useRef, useState, type CSSProperties, type PointerEvent } from 'react';
+import type { CSSProperties } from 'react';
 import { GLOBAL_INFO, LIMITS } from '../game/constants';
 import type { Action } from '../game/logic';
 import type { Game, GlobalKey, Player } from '../game/types';
 import { GlobalIcon } from './icons';
+import { useSwipeToLower } from './useSwipeToLower';
 
 interface Props {
   game: Game;
@@ -34,12 +35,6 @@ export function GlobalsPanel({ game, active, dispatch }: Props) {
   );
 }
 
-/** Distancia que hay que deslizar a la izquierda para corregir (px). */
-const SWIPE_TRIGGER = 44;
-const SWIPE_MAX = 64;
-/** Movimiento por debajo de esto cuenta como toque, no como deslizamiento. */
-const TAP_SLOP = 8;
-
 interface GaugeProps {
   param: GlobalKey;
   value: number;
@@ -61,50 +56,10 @@ function Gauge({ param, value, playerName, onRaise, onLower }: GaugeProps) {
   // "−30°" en vez de "−30°C": con Venus son 4 columnas y el termómetro ya indica grados
   const shown = param === 'temperature' ? `${value > 0 ? '+' : ''}${value}°` : info.format(value);
 
-  const [offset, setOffset] = useState(0);
-  const drag = useRef<{ x: number; y: number; horizontal: boolean | null; moved: boolean } | null>(null);
-
-  const onPointerDown = (e: PointerEvent<HTMLButtonElement>) => {
-    drag.current = { x: e.clientX, y: e.clientY, horizontal: null, moved: false };
-  };
-
-  const onPointerMove = (e: PointerEvent<HTMLButtonElement>) => {
-    const d = drag.current;
-    if (!d) return;
-    const dx = e.clientX - d.x;
-    const dy = e.clientY - d.y;
-    if (Math.abs(dx) > TAP_SLOP || Math.abs(dy) > TAP_SLOP) d.moved = true;
-    // Se decide una sola vez si el gesto es horizontal (corregir) o vertical (scroll de la página)
-    if (d.horizontal === null && d.moved) {
-      d.horizontal = Math.abs(dx) > Math.abs(dy);
-      if (d.horizontal) {
-        try {
-          // Sigue el dedo aunque salga del recuadro
-          e.currentTarget.setPointerCapture(e.pointerId);
-        } catch {
-          // algunos navegadores no lo permiten: el gesto funciona igual dentro del recuadro
-        }
-      }
-    }
-    if (d.horizontal && !atMin) setOffset(Math.max(-SWIPE_MAX, Math.min(0, dx)));
-  };
-
-  const onPointerUp = () => {
-    const d = drag.current;
-    drag.current = null;
-    if (!d) return;
-    if (d.horizontal && offset <= -SWIPE_TRIGGER) onLower();
-    else if (!d.moved && !maxed) onRaise();
-    setOffset(0);
-  };
-
-  const onPointerCancel = () => {
-    drag.current = null;
-    setOffset(0);
-  };
+  const { offset, armed, handlers } = useSwipeToLower({ onRaise, onLower, canRaise: !maxed, canLower: !atMin });
 
   return (
-    <div className={`gauge-swipe ${offset <= -SWIPE_TRIGGER ? 'armed' : ''}`}>
+    <div className={`gauge-swipe ${armed ? 'armed' : ''}`}>
       <span className="gauge-under" aria-hidden>
         −1
       </span>
@@ -113,20 +68,7 @@ function Gauge({ param, value, playerName, onRaise, onLower }: GaugeProps) {
         style={{ '--g-color': info.color, transform: offset ? `translateX(${offset}px)` : undefined } as CSSProperties}
         aria-label={`${info.label} ${info.format(value)}. Tocar para subir (+1 TR para ${playerName}); deslizar a la izquierda o flecha izquierda para corregir hacia abajo (−1 TR)`}
         aria-disabled={maxed}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerCancel}
-        onClick={(e) => {
-          // El toque ya se maneja en pointerup; esto es solo para teclado (Enter/espacio)
-          if (e.detail === 0 && !maxed) onRaise();
-        }}
-        onKeyDown={(e) => {
-          if (e.key === 'ArrowLeft' && !atMin) {
-            e.preventDefault();
-            onLower();
-          }
-        }}
+        {...handlers}
       >
         <span className="gauge-top">
           <span className="gauge-label">

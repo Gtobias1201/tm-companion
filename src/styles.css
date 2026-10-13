@@ -342,18 +342,17 @@ option, optgroup { background: var(--surface); color: var(--text); }
 .tr-plate {
   display: inline-flex; align-items: baseline; gap: 5px; cursor: pointer;
   background: #f6c443; color: #4a2a00; border: 2px solid #b07d10; border-radius: 7px; padding: 2px 9px;
+  touch-action: pan-y; user-select: none; -webkit-user-select: none;
+  transition: transform 0.18s ease, filter 0.15s ease;
 }
+.tr-plate:active { filter: brightness(0.94); }
+/* Igual que los medidores: deslizar la placa descubre el "−1" detrás */
+.tr-swipe { position: relative; flex-shrink: 0; border-radius: 7px; overflow: hidden; background: var(--accent-soft); }
+.tr-swipe .gauge-under { inset: 0 6px 0 auto; font-size: 0.8rem; }
+.tr-swipe.armed .gauge-under { color: var(--danger); }
 .tr-plate span { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em; }
 .tr-plate b { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
-.tr-sheet { display: flex; align-items: center; justify-content: center; gap: 16px; }
 .stepper { display: flex; align-items: center; gap: 10px; }
-
-/* Placa dorada, como el marcador de TR del tablero */
-.tr-value {
-  min-width: 2.6ch; padding: 2px 10px; text-align: center;
-  font-size: 1.6rem; font-weight: 700; font-variant-numeric: tabular-nums;
-  background: #f6c443; color: #4a2a00; border: 2px solid #b07d10; border-radius: 8px;
-}
 
 /* ---------- Recursos con la estética del tablero de jugador ----------
    Colores fijos (no dependen del tema), como el cartón del tablero físico. */
