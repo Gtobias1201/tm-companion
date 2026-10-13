@@ -240,9 +240,6 @@ function TrPlate({ tr, onRaise, onLower }: { tr: number; onRaise: () => void; on
   const { offset, armed, handlers } = useSwipeToLower({ onRaise, onLower, canRaise: true, canLower: tr > 0 });
   return (
     <div className={`tr-swipe ${armed ? 'armed' : ''}`}>
-      <span className="gauge-under" aria-hidden>
-        −1
-      </span>
       <button
         className="tr-plate"
         style={offset ? { transform: `translateX(${offset}px)` } : undefined}
