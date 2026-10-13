@@ -1,6 +1,7 @@
 import { IconDeviceMobile, IconMoon, IconSun } from '@tabler/icons-react';
 import { useState } from 'react';
-import { DEFAULT_CARD_COST } from '../game/constants';
+import { findCorporation } from '../game/catalog';
+import { DEFAULT_CARD_COST, DEFAULT_STEEL_VALUE, DEFAULT_TITANIUM_VALUE } from '../game/constants';
 import { useThemePref, type ThemePref } from '../theme';
 import type { PlayerPatch } from '../game/logic';
 import type { Player } from '../game/types';
@@ -28,6 +29,8 @@ export function PlayerEditDialog({ player, onSave, onClose }: Props) {
   const [greeneryCost, setGreeneryCost] = useState(player.greeneryCost);
   const [steelValue, setSteelValue] = useState(player.steelValue);
   const [titaniumValue, setTitaniumValue] = useState(player.titaniumValue);
+  // Solo Advanced Alloys sube el valor (+1), así que se elige entre el valor base y uno más
+  const baseTitanium = findCorporation(player.corporationId)?.titaniumValue ?? DEFAULT_TITANIUM_VALUE;
   const [cardCost, setCardCost] = useState(player.cardCost ?? DEFAULT_CARD_COST);
 
   return (
@@ -72,26 +75,8 @@ export function PlayerEditDialog({ player, onSave, onClose }: Props) {
         <small className="muted">8 normalmente · 7 con Ecoline</small>
       </label>
       <div className="row">
-        <label className="field grow">
-          <span>Valor del acero (M€)</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={1}
-            value={steelValue}
-            onChange={(e) => setSteelValue(Number(e.target.value) || 1)}
-          />
-        </label>
-        <label className="field grow">
-          <span>Valor del titanio (M€)</span>
-          <input
-            type="number"
-            inputMode="numeric"
-            min={1}
-            value={titaniumValue}
-            onChange={(e) => setTitaniumValue(Number(e.target.value) || 1)}
-          />
-        </label>
+        <MetalValue label="Valor del acero (M€)" metal="acero" base={DEFAULT_STEEL_VALUE} value={steelValue} onChange={setSteelValue} />
+        <MetalValue label="Valor del titanio (M€)" metal="titanio" base={baseTitanium} value={titaniumValue} onChange={setTitaniumValue} />
       </div>
       <small className="muted">Normal: acero 2 y titanio 3 · Phobolog: titanio 4 · Advanced Alloys: +1 a ambos</small>
       <label className="field">
@@ -125,5 +110,43 @@ export function PlayerEditDialog({ player, onSave, onClose }: Props) {
         <small className="muted">Se aplica al instante. "Automático" sigue el modo del celular.</small>
       </div>
     </Modal>
+  );
+}
+
+interface MetalValueProps {
+  label: string;
+  metal: string;
+  base: number;
+  value: number;
+  onChange: (value: number) => void;
+}
+
+/** Valor del acero o del titanio: del valor base a +1, con − y +. */
+function MetalValue({ label, metal, base, value, onChange }: MetalValueProps) {
+  return (
+    <div className="field grow">
+      <span>{label}</span>
+      <div className="stepper">
+        <button
+          type="button"
+          className="step"
+          disabled={value <= base}
+          onClick={() => onChange(base)}
+          aria-label={`Bajar el valor del ${metal} a ${base}`}
+        >
+          −
+        </button>
+        <span className="stepper-value">{value}</span>
+        <button
+          type="button"
+          className="step"
+          disabled={value >= base + 1}
+          onClick={() => onChange(base + 1)}
+          aria-label={`Subir el valor del ${metal} a ${base + 1}`}
+        >
+          +
+        </button>
+      </div>
+    </div>
   );
 }

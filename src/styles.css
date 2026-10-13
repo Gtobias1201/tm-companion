@@ -353,6 +353,7 @@ option, optgroup { background: var(--surface); color: var(--text); }
 .tr-plate span { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em; }
 .tr-plate b { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
 .stepper { display: flex; align-items: center; gap: 10px; }
+.stepper-value { color: var(--text); min-width: 2ch; text-align: center; font-size: 1.3rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 
 /* ---------- Recursos con la estética del tablero de jugador ----------
    Colores fijos (no dependen del tema), como el cartón del tablero físico. */
