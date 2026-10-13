@@ -1,3 +1,4 @@
+import { PUBLIC_URL, isNativeApp } from '../platform/native';
 import type { BoardId } from '../game/boards';
 import type { Action, PlayerSetup } from '../game';
 import type { Game } from '../game/types';
@@ -28,8 +29,8 @@ export const isValidCode = (code: string) => code.length === CODE_LENGTH && [...
 
 export const hostPeerId = (code: string) => PEER_PREFIX + code;
 
-/** Link que abre la app directo en "Unirme" con el código cargado. */
-export const inviteLink = (code: string) => `${location.href.split('#')[0]}#join=${code}`;
+/** Link que abre la app directo en "Unirme" con el código cargado (en la app instalada, el de la versión web). */
+export const inviteLink = (code: string) => `${isNativeApp ? PUBLIC_URL : location.href.split('#')[0]}#join=${code}`;
 
 export interface LobbyOptions {
   corporateEra: boolean;
@@ -53,7 +54,11 @@ export interface Lobby {
   seats: LobbySeat[];
 }
 
-/** Latido: cada lado manda uno cada tanto para detectar conexiones muertas aunque nadie toque nada. */
+/**
+ * Latido: cada lado manda un ping cada tanto para detectar conexiones muertas aunque nadie toque nada,
+ * y el otro contesta pong en el momento. Así, si Android frena los relojes de un celular en segundo
+ * plano, igual sigue contestando y nadie lo da por desconectado.
+ */
 export const HEARTBEAT_MS = 2000;
 /** Sin noticias del otro lado durante este tiempo, la conexión se da por perdida. */
 export const DEAD_AFTER_MS = 7000;
@@ -64,7 +69,8 @@ export type ClientMessage =
   /** seq crece con cada envío: el anfitrión descarta los repetidos al reenviar tras un corte. */
   | { t: 'action'; action: Action; seq: number }
   | { t: 'undo'; seq: number }
-  | { t: 'ping' };
+  | { t: 'ping' }
+  | { t: 'pong' };
 
 export type HostMessage =
   | { t: 'lobby'; lobby: Lobby }
@@ -79,4 +85,5 @@ export type HostMessage =
       online: string[];
     }
   | { t: 'error'; message: string }
-  | { t: 'ping' };
+  | { t: 'ping' }
+  | { t: 'pong' };

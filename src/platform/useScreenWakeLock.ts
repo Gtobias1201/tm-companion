@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 
 /**
- * Mantiene la pantalla encendida mientras la partida online está abierta: si el celular
+ * Versión web: mantiene la pantalla encendida mientras la partida online está abierta. Si el celular
  * se bloquea, el navegador corta la conexión. El sistema libera el bloqueo al cambiar de
  * app, así que se vuelve a pedir al regresar.
  */
-export function useWakeLock(enabled: boolean) {
+export function useScreenWakeLock(enabled: boolean) {
   useEffect(() => {
     if (!enabled || !('wakeLock' in navigator)) return;
     let lock: WakeLockSentinel | null = null;
