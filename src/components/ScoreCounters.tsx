@@ -1,4 +1,4 @@
-import { SCORE_LABELS, type Action } from '../game/logic';
+import { SCORE_LABELS, type Action } from '../game';
 import type { Player, ScoreKey } from '../game/types';
 
 const COUNTERS: { key: ScoreKey; hint: string }[] = [

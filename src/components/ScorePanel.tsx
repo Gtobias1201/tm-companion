@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 import { colorHex } from '../game/constants';
-import { scoreOf, type Action } from '../game/logic';
+import { scoreOf, type Action } from '../game';
 import type { Game, Player } from '../game/types';
 import { ScoreCounters } from './ScoreCounters';
 

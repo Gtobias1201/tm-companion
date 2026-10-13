@@ -1,7 +1,7 @@
 import { IconBook, IconChevronRight, IconDeviceMobile, IconLogin, IconTrash, IconUser, IconWifi } from '@tabler/icons-react';
 import { useState } from 'react';
 import { colorHex } from '../game/constants';
-import { isTerraformed } from '../game/logic';
+import { isTerraformed } from '../game';
 import type { Game } from '../game/types';
 import type { ClientSession } from '../online/session';
 import { GUIDE_TOPIC_COUNT, Guide } from './Guide';

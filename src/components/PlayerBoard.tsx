@@ -9,7 +9,7 @@ import {
 import { useState, type CSSProperties, type ReactNode } from 'react';
 import { findCorporation } from '../game/catalog';
 import { GLOBAL_INFO, HEAT_PER_TEMPERATURE, LIMITS, colorHex } from '../game/constants';
-import { isTurnOf, productionMin, type Action, type TileKind } from '../game/logic';
+import { isTurnOf, productionMin, type Action, type TileKind } from '../game';
 import { RESOURCES, type Game, type Player, type ResourceKey } from '../game/types';
 import { ResourceCard } from './ResourceCard';
 import { AmountDialog } from './AmountDialog';

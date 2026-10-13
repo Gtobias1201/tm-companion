@@ -2,7 +2,7 @@ import { IconTrees, IconTrophy } from '@tabler/icons-react';
 import type { CSSProperties } from 'react';
 import { AWARD_VP } from '../game/boards';
 import { colorHex } from '../game/constants';
-import { awardResults, finalRanking, firstPlayer, isSolo, soloWon, type Action } from '../game/logic';
+import { awardResults, finalRanking, firstPlayer, isSolo, soloWon, type Action } from '../game';
 import type { Game, Player } from '../game/types';
 import { ScoreCounters } from './ScoreCounters';
 

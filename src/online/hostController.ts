@@ -9,7 +9,7 @@ import {
   setupProblems,
   type Action,
   type PlayerSetup,
-} from '../game/logic';
+} from '../game';
 import type { Game } from '../game/types';
 import {
   HOST_CLIENT_ID,

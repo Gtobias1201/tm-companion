@@ -1,7 +1,7 @@
 import { IconArrowLeft } from '@tabler/icons-react';
 import { useState, type FormEvent } from 'react';
 import { BOARDS, type BoardId } from '../game/boards';
-import { createGame, newPlayerSetup, setupProblems, type PlayerSetup } from '../game/logic';
+import { createGame, newPlayerSetup, setupProblems, type PlayerSetup } from '../game';
 import type { Game } from '../game/types';
 import { PlayerSetupCard } from './PlayerSetupCard';
 

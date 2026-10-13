@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react';
 import { RESEARCH_CARDS, colorHex } from '../game/constants';
-import { maxCardsToBuy } from '../game/logic';
+import { maxCardsToBuy } from '../game';
 import type { Game } from '../game/types';
 import { Modal } from './Modal';
 

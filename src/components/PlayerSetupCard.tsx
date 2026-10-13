@@ -10,7 +10,7 @@ import {
   findPrelude,
 } from '../game/catalog';
 import { DISCOUNT_CARDS, scopeLabel } from '../game/constants';
-import { setupBalance, setupProblems, type PlayerSetup } from '../game/logic';
+import { setupBalance, setupProblems, type PlayerSetup } from '../game';
 import { ColorPicker } from './ColorPicker';
 
 interface Props {

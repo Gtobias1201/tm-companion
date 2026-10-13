@@ -1,7 +1,7 @@
 import { IconPlus } from '@tabler/icons-react';
 import type { CSSProperties } from 'react';
 import { GLOBAL_INFO, LIMITS } from '../game/constants';
-import type { Action } from '../game/logic';
+import type { Action } from '../game';
 import type { Game, GlobalKey, Player } from '../game/types';
 import { GlobalIcon } from './icons';
 import { useSwipeToLower } from './useSwipeToLower';

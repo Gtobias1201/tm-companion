@@ -3,7 +3,7 @@ import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 
 import { BOARDS, type BoardId } from '../game/boards';
 import { findCorporation } from '../game/catalog';
 import { colorHex } from '../game/constants';
-import { setupProblems, type PlayerSetup } from '../game/logic';
+import { setupProblems, type PlayerSetup } from '../game';
 import type { Lobby, LobbyOptions } from '../net/protocol';
 import { PlayerSetupCard } from '../components/PlayerSetupCard';
 import { InviteCard } from './InviteCard';

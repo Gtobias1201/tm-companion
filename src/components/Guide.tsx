@@ -19,7 +19,7 @@ import {
 } from '@tabler/icons-react';
 import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { GLOBAL_INFO, PLAYER_COLORS } from '../game/constants';
-import { productionMin } from '../game/logic';
+import { productionMin } from '../game';
 import type { GlobalKey } from '../game/types';
 import { ResourceCard } from './ResourceCard';
 import { GlobalIcon, SingleTileIcon, TileIcon } from './icons';

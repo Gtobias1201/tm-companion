@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { findCorporation } from '../game/catalog';
 import { DEFAULT_CARD_COST, DEFAULT_STEEL_VALUE, DEFAULT_TITANIUM_VALUE } from '../game/constants';
 import { useThemePref, type ThemePref } from '../theme';
-import type { PlayerPatch } from '../game/logic';
+import type { PlayerPatch } from '../game';
 import type { Player } from '../game/types';
 import { ColorPicker } from './ColorPicker';
 import { Modal } from './Modal';

@@ -1,7 +1,7 @@
 import { IconX } from '@tabler/icons-react';
 import { useState } from 'react';
 import { DISCOUNT_CARDS, TAG_INFO, scopeLabel } from '../game/constants';
-import type { Action } from '../game/logic';
+import type { Action } from '../game';
 import { CARD_TAGS, type DiscountScope, type Player } from '../game/types';
 
 interface Props {

@@ -1,4 +1,4 @@
-import { applyAction, isViewOnly, normalizeGame, type Action } from './game/logic';
+import { applyAction, isViewOnly, normalizeGame, type Action } from './game';
 import type { Game } from './game/types';
 
 const STORAGE_KEY = 'tm-companion:v1';

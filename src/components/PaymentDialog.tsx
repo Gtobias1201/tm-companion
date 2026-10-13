@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react';
 import { RESOURCE_INFO, STANDARD_PROJECTS, TAG_INFO, scopeLabel } from '../game/constants';
-import { applicableDiscounts, bestPayment, canAfford, paymentValue, paymentWith } from '../game/logic';
+import { applicableDiscounts, bestPayment, canAfford, paymentValue, paymentWith } from '../game';
 import { CARD_TAGS, type CardTag, type Payment, type Player, type PurchaseKind } from '../game/types';
 import { Modal } from './Modal';
 import { ResourceIcon, TagIcon } from './icons';

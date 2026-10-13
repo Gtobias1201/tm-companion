@@ -10,7 +10,7 @@ import {
   type MilestoneDef,
 } from '../game/boards';
 import { colorHex } from '../game/constants';
-import { isTurnOf, type Action } from '../game/logic';
+import { isTurnOf, type Action } from '../game';
 import type { Game, Player } from '../game/types';
 
 interface Props {

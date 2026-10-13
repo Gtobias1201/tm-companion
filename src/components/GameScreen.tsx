@@ -18,7 +18,7 @@ import {
   isTerraformed,
   scoreOf,
   type Action,
-} from '../game/logic';
+} from '../game';
 import type { Game } from '../game/types';
 import { GlobalsPanel } from './GlobalsPanel';
 import { PlayerBoard } from './PlayerBoard';
