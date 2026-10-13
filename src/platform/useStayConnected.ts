@@ -28,10 +28,14 @@ export function useStayConnected(text: string) {
   useEffect(() => {
     if (!isNativeApp) return;
     let stopped = false;
+    let running = false;
     const start = () => {
-      if (stopped || document.visibilityState !== 'visible') return Promise.resolve();
+      if (stopped || running || document.visibilityState !== 'visible') return Promise.resolve();
       // Android no deja prenderlo desde segundo plano: si falla, se reintenta al volver a la app
-      return KeepAlive.start({ title: 'Partida online en curso', text }).catch(() => undefined);
+      return KeepAlive.start({ title: 'Partida online en curso', text }).then(
+        () => void (running = true),
+        () => undefined,
+      );
     };
     // Primero el permiso de notificaciones (lo pide start) y después el de batería, de a un diálogo
     void start().then(() => {

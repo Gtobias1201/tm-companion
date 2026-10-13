@@ -29,7 +29,14 @@ public class KeepAliveService extends Service {
     /** Tope de seguridad por si la app muere sin apagar el servicio. */
     private static final long WAKE_LOCK_TIMEOUT_MS = 8 * 60 * 60 * 1000L;
 
+    private static volatile boolean running = false;
+
     private PowerManager.WakeLock wakeLock;
+
+    /** Hay una partida online abierta (lo usa MainActivity para no dejar frenar la página). */
+    static boolean isRunning() {
+        return running;
+    }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -41,6 +48,7 @@ public class KeepAliveService extends Service {
         );
         int type = Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE ? ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE : 0;
         ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, type);
+        running = true;
         acquireWakeLock();
         // Si Android mata el proceso, no tiene sentido revivir el servicio sin la partida
         return START_NOT_STICKY;
@@ -80,6 +88,7 @@ public class KeepAliveService extends Service {
 
     @Override
     public void onDestroy() {
+        running = false;
         if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
         super.onDestroy();
     }

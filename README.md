@@ -139,6 +139,9 @@ Cada merge a `main` compila el APK en GitHub (`.github/workflows/android.yml`) y
 release **android** del repositorio. Desde el celular: abrir la release, bajar `tm-companion.apk` e
 instalarlo (Android pide permitir apps de origen desconocido). Las versiones nuevas se instalan encima
 sin perder las partidas, porque todas se firman con la misma clave de prueba (`android/app/debug.keystore`).
+Después de la primera instalación, la app avisa sola en el inicio cuando hay una versión nueva
+("Actualizar"): la baja de esa release y abre el instalador de Android. La primera vez Android pide
+permitir que TM Companion instale apps.
 Para publicarla en Play Store hace falta una clave propia y justificar el permiso de batería.
 
 ### Compilarla en la compu
