@@ -52,14 +52,16 @@
 .player-line .dot { background: var(--p-color); }
 .player-line-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem; }
 .tr-plate {
-  display: inline-flex; align-items: baseline; gap: 5px; cursor: pointer;
+  position: relative; display: inline-flex; align-items: baseline; gap: 5px; cursor: pointer;
   background: #f6c443; color: #4a2a00; border: 2px solid #b07d10; border-radius: 7px; padding: 2px 9px;
   touch-action: pan-y; user-select: none; -webkit-user-select: none;
   transition: transform 0.18s ease, filter 0.15s ease;
 }
 .tr-plate:active { filter: brightness(0.94); }
-/* Deslizar la placa a la izquierda resta 1 (sin indicador detrás: tapaba el número) */
+/* Igual que los medidores: deslizar la placa descubre el "−1" detrás (la placa va encima: position relative) */
 .tr-swipe { position: relative; flex-shrink: 0; border-radius: 7px; overflow: hidden; background: var(--accent-soft); }
+.tr-swipe .gauge-under { inset: 0 6px 0 auto; font-size: 0.8rem; }
+.tr-swipe.armed .gauge-under { color: var(--danger); }
 .tr-plate span { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em; }
 .tr-plate b { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
 .stepper { display: flex; align-items: center; gap: 10px; }
