@@ -22,7 +22,7 @@ import {
   type AwardDef,
   type BoardId,
 } from './boards';
-import { CREDICOR_REBATE, PRELUDES_PER_PLAYER, findCorporation, findPrelude, type PreludeDef } from './catalog';
+import { CREDICOR_REBATE, MAX_INITIAL_CARDS, PRELUDES_PER_PLAYER, findCorporation, findPrelude, type PreludeDef } from './catalog';
 import {
   RESOURCES,
   type CardTag,
@@ -113,7 +113,8 @@ export const newPlayerSetup = (n: number, color: string): PlayerSetup => ({
   corporationId: 'beginner',
   corporation: '',
   startingMC: 0,
-  initialCards: 0,
+  // Con Beginner Corporation las 10 cartas del reparto son gratis: se las queda todas
+  initialCards: MAX_INITIAL_CARDS,
   preludes: [],
 });
 

@@ -68,7 +68,12 @@ export function PlayerSetupCard({
         <span>Corporación</span>
         <select
           value={setup.corporationId ?? MANUAL}
-          onChange={(e) => onChange({ corporationId: e.target.value || null })}
+          onChange={(e) => {
+            const next = findCorporation(e.target.value || null);
+            // Beginner se queda las 10 cartas gratis; al dejarla se vuelve a elegir desde 0
+            const initialCards = next?.freeInitialCards ? MAX_INITIAL_CARDS : corp?.freeInitialCards ? 0 : setup.initialCards;
+            onChange({ corporationId: next?.id ?? null, initialCards });
+          }}
         >
           <option value={MANUAL}>Otra (cargar a mano)</option>
           {expansionsOf(CORPORATIONS).map((exp) => (
