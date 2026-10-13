@@ -2,7 +2,7 @@ import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import type { Game } from '../game/types';
 import { GameScreen } from '../components/GameScreen';
 import { HOST_CLIENT_ID, newInviteCode } from '../net/protocol';
-import { ConnectionBadge } from './ConnectionBadge';
+import { ConnectionAlert, ConnectionBadge } from './ConnectionBadge';
 import { HostController, lobbyProblems } from './hostController';
 import { LobbyView } from './LobbyView';
 import { useWakeLock } from './useWakeLock';
@@ -54,6 +54,11 @@ export function OnlineHost({ resume, onSave, onExit }: Props) {
   if (!snap.game || !snap.me) return null;
   const others = Object.keys(snap.game.online?.members ?? {}).filter((id) => id !== HOST_CLIENT_ID);
   const connected = others.filter((id) => snap.connected.includes(id)).length;
+  const members = snap.game.online?.members ?? {};
+  const offline = others
+    .filter((id) => !snap.connected.includes(id))
+    .map((id) => snap.game!.players.find((p) => p.id === members[id])?.name)
+    .filter((name): name is string => !!name);
 
   return (
     <GameScreen
@@ -66,6 +71,15 @@ export function OnlineHost({ resume, onSave, onExit }: Props) {
         me: snap.me,
         isHost: true,
         status: <ConnectionBadge status={snap.status} extra={`${connected}/${others.length} conectados`} />,
+        // El anfitrión sin servidor sigue hablando con quienes ya estaban conectados:
+        // solo es grave si además no le queda nadie
+        alert: (
+          <ConnectionAlert
+            lost={snap.status !== 'online' && connected === 0 && others.length > 0}
+            detail={snap.statusDetail ?? 'Nadie puede entrar ni reconectarse hasta que vuelva la red.'}
+            offline={offline}
+          />
+        ),
         canUndoAny: snap.canUndoAny,
         onUndoAny: controller.undoAny,
       }}

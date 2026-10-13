@@ -1,14 +1,19 @@
-import { useEffect, useReducer, useState } from 'react';
+import { lazy, Suspense, useEffect, useReducer, useRef, useState } from 'react';
 import { appReducer, loadState, saveState } from './store';
 import type { Game } from './game/types';
 import { Home } from './components/Home';
 import { NewGame } from './components/NewGame';
 import { GameScreen } from './components/GameScreen';
-import { OnlineHost } from './online/OnlineHost';
-import { OnlineClient } from './online/OnlineClient';
 import { JoinScreen } from './online/JoinScreen';
 import { currentClientId, loadClientSession, rememberClientId } from './online/session';
 import { normalizeCode } from './net/protocol';
+
+// El modo online (PeerJS, QR) se descarga recién al usarlo: la app abre más rápido para jugar solo
+const OnlineHost = lazy(() => import('./online/OnlineHost').then((m) => ({ default: m.OnlineHost })));
+const OnlineClient = lazy(() => import('./online/OnlineClient').then((m) => ({ default: m.OnlineClient })));
+
+/** Guardar en el celular en cada toque es caro con partidas largas: se agrupa y se guarda al salir. */
+const SAVE_DEBOUNCE_MS = 400;
 
 type Screen =
   | { kind: 'home' }
@@ -33,7 +38,26 @@ export function App() {
   const [screen, setScreen] = useState<Screen>(INITIAL_SCREEN);
   const home = () => setScreen({ kind: 'home' });
 
-  useEffect(() => saveState(state), [state.games, state.currentId]);
+  const latest = useRef(state);
+  latest.current = state;
+  const hosting = screen.kind === 'host';
+  useEffect(() => {
+    // El anfitrión guarda al instante: su copia es la oficial y ya les confirmó a los demás
+    if (hosting) return saveState(latest.current);
+    const t = window.setTimeout(() => saveState(latest.current), SAVE_DEBOUNCE_MS);
+    return () => window.clearTimeout(t);
+  }, [state.games, state.currentId, hosting]);
+  // Al cerrar o mandar la app al fondo se guarda ya, sin esperar
+  useEffect(() => {
+    const flush = () => saveState(latest.current);
+    const onHidden = () => document.visibilityState === 'hidden' && flush();
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', onHidden);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', onHidden);
+    };
+  }, []);
 
   // Un link de invitación abierto con la app ya cargada en esta pestaña
   useEffect(() => {
@@ -48,7 +72,9 @@ export function App() {
   switch (screen.kind) {
     case 'host':
       return (
-        <OnlineHost resume={screen.resume} onSave={(game) => dispatch({ type: 'save', game })} onExit={home} />
+        <Suspense fallback={<Loading />}>
+          <OnlineHost resume={screen.resume} onSave={(game) => dispatch({ type: 'save', game })} onExit={home} />
+        </Suspense>
       );
     case 'join':
       return (
@@ -59,7 +85,11 @@ export function App() {
         />
       );
     case 'client':
-      return <OnlineClient code={screen.code} clientId={screen.clientId} onExit={home} />;
+      return (
+        <Suspense fallback={<Loading />}>
+          <OnlineClient code={screen.code} clientId={screen.clientId} onExit={home} />
+        </Suspense>
+      );
     case 'solo':
       return (
         <NewGame
@@ -105,5 +135,15 @@ export function App() {
       }}
       onDelete={(id) => dispatch({ type: 'delete', id })}
     />
+  );
+}
+
+function Loading() {
+  return (
+    <div className="page">
+      <div className="empty-state">
+        <p className="muted">Cargando…</p>
+      </div>
+    </div>
   );
 }

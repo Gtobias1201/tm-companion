@@ -13,6 +13,15 @@ npm run dev
 Abre http://localhost:5173. Para probarla en el celular, conectalo a la misma red Wi-Fi
 y abre la dirección "Network" que muestra Vite (por ejemplo `http://192.168.0.10:5173`).
 
+### Probar el modo online sin internet
+
+```bash
+npx peerjs --port 9000          # servidor PeerJS local
+VITE_PEER_SERVER=localhost:9000 npm run dev
+```
+
+Sin `VITE_PEER_SERVER` la app usa el servidor público de PeerJS.
+
 ## Estructura
 
 - `src/game/` — reglas del juego, sin React (tipos, constantes, lógica de acciones).

@@ -152,4 +152,6 @@ export interface OnlineInfo {
   code: string;
   /** Qué jugador es cada celular: clientId → playerId. */
   members: Record<string, string>;
+  /** Último mensaje aplicado de cada celular (clientId → seq), para no repetir acciones reenviadas. */
+  seqs?: Record<string, number>;
 }

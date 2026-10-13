@@ -41,6 +41,8 @@ interface UndoEntry {
 }
 
 const UNDO_LIMIT = 50;
+/** Varios toques seguidos (subir un medidor 3 veces) viajan en un solo envío a los demás. */
+const SEND_COALESCE_MS = 60;
 
 /** Motivos por los que todavía no se puede empezar la partida desde la sala. */
 export function lobbyProblems(lobby: Lobby): string[] {
@@ -74,6 +76,9 @@ export class HostController {
   private status: LinkStatus = 'connecting';
   private statusDetail: string | undefined;
   private snapshot: HostSnapshot;
+  /** Último seq aplicado por celular; se guarda con la partida para sobrevivir a una recarga. */
+  private seqs: Record<string, number> = {};
+  private sendTimer: number | undefined;
 
   constructor(
     private code: string,
@@ -81,6 +86,7 @@ export class HostController {
   ) {
     if (opts.resume) {
       this.game = normalizeGame(structuredClone(opts.resume));
+      this.seqs = { ...this.game.online?.seqs };
     } else {
       this.lobby = {
         code,
@@ -136,6 +142,7 @@ export class HostController {
   }
 
   stop() {
+    window.clearTimeout(this.sendTimer);
     this.transport.stop();
   }
 
@@ -202,27 +209,31 @@ export class HostController {
     this.commit(prev.game);
   };
 
-  private applyFrom(clientId: string, action: Action) {
+  /** Devuelve true si la partida cambió (y ya se publicó). */
+  private applyFrom(clientId: string, action: Action): boolean {
     const game = this.game;
     const playerId = game?.online?.members[clientId];
-    if (!game || !playerId || !isAllowed(game, action, playerId, clientId === HOST_CLIENT_ID)) return;
+    if (!game || !playerId || !isAllowed(game, action, playerId, clientId === HOST_CLIENT_ID)) return false;
     const next = applyAction(game, action);
-    if (next === game) return;
+    if (next === game) return false;
     this.undo = [...this.undo, { game, by: playerId }].slice(-UNDO_LIMIT);
     this.commit(next);
+    return true;
   }
 
   /** Cada jugador solo puede deshacer su propia última acción. */
-  private undoFor(playerId: string) {
+  private undoFor(playerId: string): boolean {
     const top = this.undo[this.undo.length - 1];
-    if (!top || top.by !== playerId) return;
+    if (!top || top.by !== playerId) return false;
     this.undo.pop();
     this.commit(top.game);
+    return true;
   }
 
   private commit(game: Game) {
-    this.game = game;
-    this.opts.onSave(game);
+    // Los seq van siempre al día, aunque se esté volviendo a un estado anterior con deshacer
+    this.game = game.online ? { ...game, online: { ...game.online, seqs: { ...this.seqs } } } : game;
+    this.opts.onSave(this.game);
     this.publish();
   }
 
@@ -235,10 +246,15 @@ export class HostController {
       case 'seat':
         return this.updateSeat(clientId, msg.setup, msg.ready);
       case 'action':
-        return this.applyFrom(clientId, msg.action);
       case 'undo': {
+        // Reenvío tras un corte de algo que ya se aplicó: solo confirmar
+        if (msg.seq <= (this.seqs[clientId] ?? 0)) return this.sendState(clientId);
+        this.seqs[clientId] = msg.seq;
         const playerId = this.game?.online?.members[clientId];
-        if (playerId) this.undoFor(playerId);
+        const changed =
+          msg.t === 'action' ? this.applyFrom(clientId, msg.action) : !!playerId && this.undoFor(playerId);
+        // Rechazada o sin efecto: igual hay que confirmarle que llegó
+        if (!changed) this.sendState(clientId);
         return;
       }
     }
@@ -246,9 +262,13 @@ export class HostController {
 
   private onHello(clientId: string) {
     if (this.game) {
-      if (this.game.online?.members[clientId]) this.sendState(clientId);
-      else this.transport.send(clientId, { t: 'error', message: 'La partida ya empezó sin vos.' });
-      this.emit();
+      if (this.game.online?.members[clientId]) {
+        this.sendState(clientId);
+        // Los demás ven que volvió
+        this.publish();
+      } else {
+        this.transport.send(clientId, { t: 'error', message: 'La partida ya empezó sin vos.' });
+      }
       return;
     }
     if (!this.lobby) return;
@@ -276,26 +296,46 @@ export class HostController {
         ...this.lobby,
         seats: this.lobby.seats.map((s) => (s.clientId === clientId ? { ...s, connected: false } : s)),
       };
-      this.publish();
-    } else {
-      this.emit();
     }
+    // En partida: los demás ven quién se desconectó
+    this.publish();
   }
 
-  /** Envía la sala o la partida a todos los conectados y avisa a la pantalla del anfitrión. */
+  /** Avisa a la pantalla del anfitrión al instante y envía la sala o la partida a todos los conectados. */
   private publish() {
+    this.emit();
+    if (this.sendTimer !== undefined) return;
+    this.sendTimer = window.setTimeout(() => {
+      this.sendTimer = undefined;
+      this.sendAll();
+    }, SEND_COALESCE_MS);
+  }
+
+  private sendAll() {
     for (const clientId of this.transport.clients()) {
       if (this.lobby) this.transport.send(clientId, { t: 'lobby', lobby: this.lobby });
       else this.sendState(clientId);
     }
-    this.emit();
+  }
+
+  /** playerIds con el celular conectado ahora, anfitrión incluido. */
+  private onlinePlayers(): string[] {
+    const members = this.game?.online?.members ?? {};
+    return [HOST_CLIENT_ID, ...this.transport.clients()].map((c) => members[c]).filter((id): id is string => !!id);
   }
 
   private sendState(clientId: string) {
     const playerId = this.game?.online?.members[clientId];
     if (!this.game || !playerId) return;
     const top = this.undo[this.undo.length - 1];
-    this.transport.send(clientId, { t: 'state', game: this.game, playerId, canUndo: !!top && top.by === playerId });
+    this.transport.send(clientId, {
+      t: 'state',
+      game: this.game,
+      playerId,
+      canUndo: !!top && top.by === playerId,
+      ack: this.seqs[clientId] ?? 0,
+      online: this.onlinePlayers(),
+    });
   }
 }
 
