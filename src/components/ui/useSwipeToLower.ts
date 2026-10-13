@@ -3,6 +3,8 @@ import { useRef, useState, type PointerEvent } from 'react';
 /** Distancia que hay que deslizar a la izquierda para corregir (px). */
 const SWIPE_TRIGGER = 44;
 const SWIPE_MAX = 64;
+/** Parte del botón que queda a la vista al deslizar del todo, para que no desaparezca (como los medidores). */
+const MIN_VISIBLE = 0.45;
 /** Movimiento por debajo de esto cuenta como toque, no como deslizamiento. */
 const TAP_SLOP = 8;
 
@@ -20,9 +22,13 @@ interface Options {
 export function useSwipeToLower({ onRaise, onLower, canRaise, canLower }: Options) {
   const [offset, setOffset] = useState(0);
   const drag = useRef<{ x: number; y: number; horizontal: boolean | null; moved: boolean } | null>(null);
+  // En botones angostos (la placa de TR) se desliza menos y alcanza con menos recorrido para corregir
+  const limits = useRef({ max: SWIPE_MAX, trigger: SWIPE_TRIGGER });
 
   const onPointerDown = (e: PointerEvent<HTMLButtonElement>) => {
     drag.current = { x: e.clientX, y: e.clientY, horizontal: null, moved: false };
+    const max = Math.min(SWIPE_MAX, e.currentTarget.offsetWidth * (1 - MIN_VISIBLE)) || SWIPE_MAX;
+    limits.current = { max, trigger: (max * SWIPE_TRIGGER) / SWIPE_MAX };
   };
 
   const onPointerMove = (e: PointerEvent<HTMLButtonElement>) => {
@@ -43,14 +49,14 @@ export function useSwipeToLower({ onRaise, onLower, canRaise, canLower }: Option
         }
       }
     }
-    if (d.horizontal && canLower) setOffset(Math.max(-SWIPE_MAX, Math.min(0, dx)));
+    if (d.horizontal && canLower) setOffset(Math.max(-limits.current.max, Math.min(0, dx)));
   };
 
   const onPointerUp = () => {
     const d = drag.current;
     drag.current = null;
     if (!d) return;
-    if (d.horizontal && offset <= -SWIPE_TRIGGER) onLower();
+    if (d.horizontal && offset <= -limits.current.trigger) onLower();
     else if (!d.moved && canRaise) onRaise();
     setOffset(0);
   };
@@ -62,7 +68,7 @@ export function useSwipeToLower({ onRaise, onLower, canRaise, canLower }: Option
 
   return {
     offset,
-    armed: offset <= -SWIPE_TRIGGER,
+    armed: offset <= -limits.current.trigger,
     handlers: {
       onPointerDown,
       onPointerMove,
