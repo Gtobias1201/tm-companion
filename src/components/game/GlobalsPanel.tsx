@@ -18,7 +18,7 @@ export function GlobalsPanel({ game, active, dispatch }: Props) {
   if (game.options.venus) params.push('venus');
 
   return (
-    <section className="globals" aria-label="Parámetros globales">
+    <section className="globals" aria-label="Parámetros globales" data-tour="globals">
       <div className="gauges" style={{ gridTemplateColumns: `repeat(${params.length}, minmax(0, 1fr))` }}>
         {params.map((k) => (
           <Gauge

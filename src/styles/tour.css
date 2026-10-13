@@ -1,0 +1,35 @@
+/* ---------- Recorrido de bienvenida ---------- */
+.tour { position: fixed; inset: 0; z-index: 30; pointer-events: none; }
+.tour-block { position: fixed; pointer-events: auto; touch-action: none; }
+.tour-block.dim { inset: 0; background: var(--overlay); }
+/* El hueco oscurece todo lo demás con su sombra y deja ver (y tocar) el elemento */
+.tour-hole {
+  position: fixed; border-radius: 14px; pointer-events: none;
+  box-shadow: 0 0 0 2px var(--accent), 0 0 0 9999px var(--overlay);
+  transition: top 0.2s ease, left 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+.tour-hole.try { animation: tour-pulse 1.6s ease-in-out infinite; }
+@keyframes tour-pulse {
+  50% { box-shadow: 0 0 0 5px var(--accent-soft), 0 0 0 9999px var(--overlay); }
+}
+
+.tour-bubble {
+  position: fixed; left: 0; right: 0; margin: 0 auto; pointer-events: auto;
+  width: calc(100% - 32px); max-width: 400px; box-sizing: border-box;
+  padding: 14px 16px; border-radius: var(--radius);
+  background: var(--surface); border: 1px solid var(--border); color: var(--text);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.25);
+  display: flex; flex-direction: column; gap: 6px;
+  transition: top 0.2s ease;
+}
+.tour-bubble:focus { outline: none; }
+.tour.centered .tour-bubble { top: 50%; transform: translateY(-50%); }
+.tour-bubble h2 { font-size: 1.05rem; margin: 0; }
+.tour-bubble p { margin: 0; font-size: 0.92rem; line-height: 1.4; }
+.tour-progress { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.tour-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-hole, .tour-bubble { transition: none; }
+  .tour-hole.try { animation: none; }
+}

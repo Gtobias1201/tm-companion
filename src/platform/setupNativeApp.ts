@@ -11,7 +11,7 @@ export async function setupNativeApp() {
   await App.addListener('backButton', () => {
     const backdrop = document.querySelector<HTMLElement>('.modal-backdrop');
     if (backdrop) return backdrop.click();
-    if (document.querySelector('.guide')) return window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    if (document.querySelector('.tour, .guide')) return window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     const back = document.querySelector<HTMLElement>('.topbar [aria-label="Volver"]');
     if (back) return back.click();
     void App.minimizeApp();

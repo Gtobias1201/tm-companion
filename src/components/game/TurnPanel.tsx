@@ -14,7 +14,7 @@ export function TurnPanel({ game, player, dispatch }: Props) {
     const done = game.turn.actions;
     const pid = player.id;
     return (
-      <section className="turn-bar is-turn" aria-label="Turno">
+      <section className="turn-bar is-turn" aria-label="Turno" data-tour="turn">
         <div className="turn-info">
           <strong>Tu turno</strong>
           <span className="action-dots" role="img" aria-label={`${done} de ${ACTIONS_PER_TURN} acciones`}>
@@ -51,7 +51,7 @@ export function TurnPanel({ game, player, dispatch }: Props) {
         : 'Todos pasaron';
 
   return (
-    <section className="turn-bar locked" aria-label="Turno">
+    <section className="turn-bar locked" aria-label="Turno" data-tour="turn">
       <IconLock size={16} aria-hidden />
       <span className="grow">{status}</span>
       <span className="muted small">acciones bloqueadas</span>

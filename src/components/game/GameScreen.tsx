@@ -111,7 +111,7 @@ export function GameScreen({ game, canUndo, dispatch, onUndo, onExit, online }: 
         <button className="icon-btn" onClick={() => setDialog('log')} aria-label="Registro">
           <IconHistory size={20} />
         </button>
-        <button className="icon-btn" onClick={() => setGuide(true)} aria-label="Guía de uso">
+        <button className="icon-btn" onClick={() => setGuide(true)} aria-label="Guía de uso" data-tour="help">
           <IconHelp size={20} />
         </button>
       </header>
@@ -151,7 +151,7 @@ export function GameScreen({ game, canUndo, dispatch, onUndo, onExit, online }: 
             onResearch={() => setDialog('research')}
           />
 
-          <div className="segmented three" role="tablist" aria-label="Vista">
+          <div className="segmented three" role="tablist" aria-label="Vista" data-tour="views">
             {VIEWS.map((v) => (
               <button
                 key={v.id}
@@ -178,7 +178,7 @@ export function GameScreen({ game, canUndo, dispatch, onUndo, onExit, online }: 
         </>
       )}
 
-      <footer className="bottombar">
+      <footer className="bottombar" data-tour="bottombar">
         <button className="btn ghost" disabled={!canUndo} onClick={onUndo}>
           <IconArrowBackUp size={18} /> {online ? 'Deshacer lo mío' : 'Deshacer'}
         </button>

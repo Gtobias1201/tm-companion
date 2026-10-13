@@ -1,4 +1,4 @@
-import { IconArrowLeft, IconChevronRight } from '@tabler/icons-react';
+import { IconArrowLeft, IconChevronRight, IconRoute } from '@tabler/icons-react';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { GROUPS, TOPICS } from './topics';
 
@@ -14,8 +14,11 @@ function Figure({ children }: { children: ReactNode }) {
   );
 }
 
-/** Guía de uso a pantalla completa: índice de temas y cada tema paso a paso. */
-export function Guide({ onClose }: { onClose: () => void }) {
+/**
+ * Guía de uso a pantalla completa: índice de temas y cada tema paso a paso.
+ * Con `onTour` (desde el inicio) ofrece repetir el recorrido de bienvenida.
+ */
+export function Guide({ onClose, onTour }: { onClose: () => void; onTour?: () => void }) {
   const [index, setIndex] = useState<number | null>(null);
   const bodyRef = useRef<HTMLDivElement>(null);
   const topic = index === null ? null : TOPICS[index];
@@ -74,6 +77,18 @@ export function Guide({ onClose }: { onClose: () => void }) {
         {topic === null ? (
           <div className="guide-col guide-index">
             <p className="note">Tocá un tema para verlo. La guía está siempre en el inicio y en la partida.</p>
+            {onTour && (
+              <button className="guide-topic" onClick={onTour}>
+                <span className="guide-icon">
+                  <IconRoute size={20} />
+                </span>
+                <span className="grow">
+                  <strong>Ver el recorrido de bienvenida</strong>
+                  <small className="muted">Lo básico de la app en un minuto, con una partida de práctica</small>
+                </span>
+                <IconChevronRight size={18} className="muted" aria-hidden />
+              </button>
+            )}
             {GROUPS.map((g) => (
               <section key={g.label} aria-label={g.label}>
                 <h2 className="guide-group">{g.label}</h2>
