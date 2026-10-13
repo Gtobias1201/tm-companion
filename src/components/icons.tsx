@@ -18,7 +18,7 @@ import type { CardTag, GlobalKey, ResourceKey } from '../game/types';
 
 type IconComponent = Icon | ComponentType<{ size?: number; stroke?: number }>;
 
-/** Símbolo de Venus como en el juego: el planeta envuelto en remolinos de nubes. */
+/** Símbolo de Venus como en el juego: el medidor en arco con una V en el centro. */
 function IconVenus({ size = 24, stroke = 2 }: { size?: number; stroke?: number }) {
   return (
     <svg
@@ -31,10 +31,10 @@ function IconVenus({ size = 24, stroke = 2 }: { size?: number; stroke?: number }
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <circle cx="12" cy="12" r="9" />
-      <path d="M4.6 8.2c2.4 -1.6 4.6 .6 7 -.2s4.2 -1.6 6.6 -.2" />
-      <path d="M3.2 12.6c2.8 1 5 -1.4 8.2 -.6c2.4 .6 3.6 2 6 1.4c1 -.3 2 -.9 3.4 -1.2" />
-      <path d="M9.6 17.6c1.6 1.2 4.4 .8 5 -1c.5 -1.5 -.8 -2.6 -2.2 -2.2c-1 .3 -1.2 1.4 -.4 1.8" />
+      <path d="M2 20a10 10 0 0 1 3.8 -7.9" />
+      <path d="M7.6 11a10 10 0 0 1 8.8 0" />
+      <path d="M18.2 12.1a10 10 0 0 1 3.8 7.9" />
+      <path d="M7 4.5l5 14l5 -14" />
     </svg>
   );
 }
