@@ -1,9 +1,7 @@
 import {
   IconArrowBackUp,
-  IconArrowLeft,
   IconArrowRight,
   IconCalendar,
-  IconChevronRight,
   IconCreditCard,
   IconFlag,
   IconFlame,
@@ -17,12 +15,12 @@ import {
   IconWifi,
   type TablerIcon,
 } from '@tabler/icons-react';
-import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { GLOBAL_INFO, PLAYER_COLORS } from '../game/constants';
-import { productionMin } from '../game';
-import type { GlobalKey } from '../game/types';
-import { ResourceCard } from './ResourceCard';
-import { GlobalIcon, SingleTileIcon, TileIcon } from './icons';
+import { Fragment, type CSSProperties, type ReactNode } from 'react';
+import { GLOBAL_INFO, PLAYER_COLORS } from '../../game/constants';
+import { productionMin } from '../../game';
+import type { GlobalKey } from '../../game/types';
+import { ResourceCard } from '../game/ResourceCard';
+import { GlobalIcon, SingleTileIcon, TileIcon } from '../ui/icons';
 
 interface Topic {
   title: string;
@@ -36,13 +34,30 @@ interface Topic {
 const noop = () => {};
 
 /** Miniatura de un medidor global, con las mismas clases que el de la partida. */
-function GaugeSample({ param, shown, pct, maxed, swiped }: { param: GlobalKey; shown: string; pct: number; maxed?: boolean; swiped?: boolean }) {
+function GaugeSample({
+  param,
+  shown,
+  pct,
+  maxed,
+  swiped,
+}: {
+  param: GlobalKey;
+  shown: string;
+  pct: number;
+  maxed?: boolean;
+  swiped?: boolean;
+}) {
   return (
     <div className={`gauge-swipe ${swiped ? 'armed' : ''}`}>
       <span className="gauge-under">−1</span>
       <div
         className={`gauge ${maxed ? 'maxed' : ''}`}
-        style={{ '--g-color': GLOBAL_INFO[param].color, transform: swiped ? 'translateX(-24px)' : undefined } as CSSProperties}
+        style={
+          {
+            '--g-color': GLOBAL_INFO[param].color,
+            transform: swiped ? 'translateX(-24px)' : undefined,
+          } as CSSProperties
+        }
       >
         <span className="gauge-top">
           <span className="gauge-label">
@@ -78,7 +93,8 @@ function Rows({ rows, total }: { rows: [string, string][]; total?: [string, stri
   );
 }
 
-const GROUPS: { label: string; topics: Topic[] }[] = [
+/** Temas de la guía, agrupados como se muestran en el índice. */
+export const GROUPS: { label: string; topics: Topic[] }[] = [
   {
     label: 'Para empezar',
     topics: [
@@ -89,7 +105,10 @@ const GROUPS: { label: string; topics: Topic[] }[] = [
         steps: [
           ['Crear partida online:', 'tu celular es el anfitrión. Pasales a los demás el código de 5 letras o el QR.'],
           ['Unirme con un código:', 'escribí el código que te pasó el anfitrión. Tiene que tener la sala abierta.'],
-          ['En la sala de espera', 'cada uno elige nombre, color, corporación y preludios, y confirma. El anfitrión elige el mapa y empieza.'],
+          [
+            'En la sala de espera',
+            'cada uno elige nombre, color, corporación y preludios, y confirma. El anfitrión elige el mapa y empieza.',
+          ],
           ['Partida solitaria:', 'todo queda en este celular y funciona sin internet.'],
         ],
         figure: () => (
@@ -365,7 +384,10 @@ const GROUPS: { label: string; topics: Topic[] }[] = [
         summary: 'Corregir errores y modo noche',
         icon: IconArrowBackUp,
         steps: [
-          ['“Deshacer”', 'vuelve atrás tu última acción. Online solo deshacés lo tuyo; el anfitrión puede deshacer lo de la mesa.'],
+          [
+            '“Deshacer”',
+            'vuelve atrás tu última acción. Online solo deshacés lo tuyo; el anfitrión puede deshacer lo de la mesa.',
+          ],
           ['Con el lápiz al lado de tu TR', 'cambiás nombre y color, y elegís día, noche o automático.'],
           ['El registro', '(arriba en la partida) muestra todo lo que pasó.'],
         ],
@@ -387,141 +409,4 @@ const GROUPS: { label: string; topics: Topic[] }[] = [
   },
 ];
 
-const TOPICS = GROUPS.flatMap((g) => g.topics);
-export const GUIDE_TOPIC_COUNT = TOPICS.length;
-
-/** Ilustración decorativa: sin foco ni toques, los lectores de pantalla la saltean. */
-function Figure({ children }: { children: ReactNode }) {
-  return (
-    <div className="guide-figure" aria-hidden ref={(el) => el?.setAttribute('inert', '')}>
-      {children}
-    </div>
-  );
-}
-
-/** Guía de uso a pantalla completa: índice de temas y cada tema paso a paso. */
-export function Guide({ onClose }: { onClose: () => void }) {
-  const [index, setIndex] = useState<number | null>(null);
-  const bodyRef = useRef<HTMLDivElement>(null);
-  const topic = index === null ? null : TOPICS[index];
-
-  // La página de atrás no se desplaza mientras la guía está abierta
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, []);
-
-  useEffect(() => {
-    bodyRef.current?.scrollTo(0, 0);
-  }, [index]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape') return;
-      if (index === null) onClose();
-      else setIndex(null);
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [index, onClose]);
-
-  return (
-    <div className="guide" role="dialog" aria-modal="true" aria-label="Guía de uso">
-      <header className="guide-head">
-        <div className="guide-col topbar">
-          <button
-            className="icon-btn"
-            onClick={() => (index === null ? onClose() : setIndex(null))}
-            aria-label={index === null ? 'Cerrar la guía' : 'Volver a los temas'}
-          >
-            <IconArrowLeft size={20} />
-          </button>
-          <h1 className="grow">Guía de uso</h1>
-          {index !== null && (
-            <span className="muted small">
-              {index + 1} de {TOPICS.length}
-            </span>
-          )}
-        </div>
-        {index !== null && (
-          <div className="guide-col">
-            <div className="guide-progress">
-              <span style={{ width: `${((index + 1) / TOPICS.length) * 100}%` }} />
-            </div>
-          </div>
-        )}
-      </header>
-
-      <div className="guide-body" ref={bodyRef}>
-        {topic === null ? (
-          <div className="guide-col guide-index">
-            <p className="note">Tocá un tema para verlo. La guía está siempre en el inicio y en la partida.</p>
-            {GROUPS.map((g) => (
-              <section key={g.label} aria-label={g.label}>
-                <h2 className="guide-group">{g.label}</h2>
-                <ul>
-                  {g.topics.map((t) => (
-                    <li key={t.title}>
-                      <button className="guide-topic" onClick={() => setIndex(TOPICS.indexOf(t))}>
-                        <span className="guide-icon">
-                          <t.icon size={20} />
-                        </span>
-                        <span className="grow">
-                          <strong>{t.title}</strong>
-                          <small className="muted">{t.summary}</small>
-                        </span>
-                        <IconChevronRight size={18} className="muted" aria-hidden />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            ))}
-          </div>
-        ) : (
-          <article className="guide-col guide-page">
-            <div className="guide-title">
-              <span className="guide-icon big">
-                <topic.icon size={24} />
-              </span>
-              <div>
-                <h2>{topic.title}</h2>
-                <p className="muted">{topic.summary}</p>
-              </div>
-            </div>
-            <Figure>{topic.figure()}</Figure>
-            <ol className="guide-steps">
-              {topic.steps.map(([lead, text], i) => (
-                <li key={i}>
-                  <span className="guide-step-num">{i + 1}</span>
-                  <p>
-                    <strong>{lead}</strong> {text}
-                  </p>
-                </li>
-              ))}
-            </ol>
-          </article>
-        )}
-      </div>
-
-      {index !== null && (
-        <footer className="guide-foot">
-          <div className="guide-col">
-            <button className="btn grow" disabled={index === 0} onClick={() => setIndex(index - 1)}>
-              Anterior
-            </button>
-            <button
-              className="btn primary grow"
-              onClick={() => setIndex(index === TOPICS.length - 1 ? null : index + 1)}
-            >
-              {index === TOPICS.length - 1 ? 'Listo' : 'Siguiente'}
-            </button>
-          </div>
-        </footer>
-      )}
-    </div>
-  );
-}
+export const TOPICS = GROUPS.flatMap((g) => g.topics);

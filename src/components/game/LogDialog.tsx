@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import type { Game } from '../game/types';
-import { Modal } from './Modal';
+import type { Game } from '../../game/types';
+import { Modal } from '../ui/Modal';
 
 export function LogDialog({ game, onClose, footer }: { game: Game; onClose: () => void; footer?: ReactNode }) {
   const entries = [...game.log].reverse();

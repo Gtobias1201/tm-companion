@@ -65,7 +65,14 @@ export function advancePhase(g: Game): boolean {
     if (awardResults(g).some((r) => !r.complete)) return false;
     g.phase = 'finished';
     const [winner] = finalRanking(g);
-    log(g, isSolo(g) ? (soloWon(g) ? 'Partida ganada: Marte terraformado' : 'Partida perdida: Marte sin terraformar') : `Ganó ${winner.p.name} con ${winner.s.total} PV`);
+    log(
+      g,
+      isSolo(g)
+        ? soloWon(g)
+          ? 'Partida ganada: Marte terraformado'
+          : 'Partida perdida: Marte sin terraformar'
+        : `Ganó ${winner.p.name} con ${winner.s.total} PV`,
+    );
     return true;
   }
   return false;

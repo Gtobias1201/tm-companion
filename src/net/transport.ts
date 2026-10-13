@@ -88,7 +88,13 @@ export class HostTransport {
     peer.on('error', (err) => {
       if (this.stopped || peer !== this.peer) return;
       // Tras recargar la página el código puede seguir tomado unos segundos: reintentamos
-      if (err.type === 'unavailable-id' || err.type === 'network' || err.type === 'server-error' || err.type === 'socket-error' || err.type === 'socket-closed') {
+      if (
+        err.type === 'unavailable-id' ||
+        err.type === 'network' ||
+        err.type === 'server-error' ||
+        err.type === 'socket-error' ||
+        err.type === 'socket-closed'
+      ) {
         this.handlers.onStatus('reconnecting', err.type === 'unavailable-id' ? 'El código todavía está en uso' : undefined);
         this.schedule(() => this.restart());
       }

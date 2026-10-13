@@ -1,7 +1,7 @@
 import type { CSSProperties } from 'react';
-import { colorHex } from '../game/constants';
-import { scoreOf, type Action } from '../game';
-import type { Game, Player } from '../game/types';
+import { colorHex } from '../../game/constants';
+import { scoreOf, type Action } from '../../game';
+import type { Game, Player } from '../../game/types';
 import { ScoreCounters } from './ScoreCounters';
 
 interface Props {
@@ -11,9 +11,7 @@ interface Props {
 }
 
 export function ScorePanel({ game, active, dispatch }: Props) {
-  const rows = game.players
-    .map((p) => ({ p, s: scoreOf(game, p) }))
-    .sort((a, b) => b.s.total - a.s.total);
+  const rows = game.players.map((p) => ({ p, s: scoreOf(game, p) })).sort((a, b) => b.s.total - a.s.total);
 
   return (
     <div className="score">

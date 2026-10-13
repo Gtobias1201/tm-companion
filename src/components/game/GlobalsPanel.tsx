@@ -1,10 +1,10 @@
 import { IconPlus } from '@tabler/icons-react';
 import type { CSSProperties } from 'react';
-import { GLOBAL_INFO, LIMITS } from '../game/constants';
-import type { Action } from '../game';
-import type { Game, GlobalKey, Player } from '../game/types';
-import { GlobalIcon } from './icons';
-import { useSwipeToLower } from './useSwipeToLower';
+import { GLOBAL_INFO, LIMITS } from '../../game/constants';
+import type { Action } from '../../game';
+import type { Game, GlobalKey, Player } from '../../game/types';
+import { GlobalIcon } from '../ui/icons';
+import { useSwipeToLower } from '../ui/useSwipeToLower';
 
 interface Props {
   game: Game;
@@ -79,7 +79,14 @@ function Gauge({ param, value, playerName, onRaise, onLower }: GaugeProps) {
             {maxed ? '✓' : <IconPlus size={14} />}
           </span>
         </span>
-        <span className="bar" role="progressbar" aria-label={info.label} aria-valuemin={L.min} aria-valuemax={L.max} aria-valuenow={value}>
+        <span
+          className="bar"
+          role="progressbar"
+          aria-label={info.label}
+          aria-valuemin={L.min}
+          aria-valuemax={L.max}
+          aria-valuenow={value}
+        >
           <span className="bar-fill" style={{ width: `${pct}%` }} />
         </span>
       </button>

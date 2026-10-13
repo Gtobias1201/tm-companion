@@ -14,9 +14,7 @@ export const firstPlayer = (g: Game) => g.players[(g.generation - 1) % g.players
 
 export function isTerraformed(g: Game): boolean {
   const { temperature, oxygen, oceans } = g.globals;
-  return (
-    temperature >= LIMITS.temperature.max && oxygen >= LIMITS.oxygen.max && oceans >= LIMITS.oceans.max
-  );
+  return temperature >= LIMITS.temperature.max && oxygen >= LIMITS.oxygen.max && oceans >= LIMITS.oceans.max;
 }
 
 /** Durante la fase de investigación nadie puede hacer acciones todavía. */
@@ -24,12 +22,10 @@ export const isTurnOf = (g: Game, playerId: string) =>
   g.phase === 'playing' && !g.researchPending && g.turn?.playerId === playerId;
 
 /** La partida termina al final de la generación en que se completa la terraformación. */
-export const isLastGeneration = (g: Game) =>
-  isTerraformed(g) || (isSolo(g) && g.generation >= SOLO_GENERATIONS);
+export const isLastGeneration = (g: Game) => isTerraformed(g) || (isSolo(g) && g.generation >= SOLO_GENERATIONS);
 
 /** En solitario se gana si Marte (y Venus, con Venus Next) quedó terraformado. */
-export const soloWon = (g: Game) =>
-  isTerraformed(g) && (!g.options.venus || g.globals.venus >= LIMITS.venus.max);
+export const soloWon = (g: Game) => isTerraformed(g) && (!g.options.venus || g.globals.venus >= LIMITS.venus.max);
 
 /** Cuántas cartas puede comprar el jugador en la fase de investigación. */
 export const maxCardsToBuy = (p: Player) =>

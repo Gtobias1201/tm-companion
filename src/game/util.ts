@@ -7,7 +7,6 @@ export function uid(): string {
 }
 
 /** Mapa con todos los recursos en el mismo valor. */
-export const filled = (n: number): ResourceMap =>
-  Object.fromEntries(RESOURCES.map((k) => [k, n])) as ResourceMap;
+export const filled = (n: number): ResourceMap => Object.fromEntries(RESOURCES.map((k) => [k, n])) as ResourceMap;
 
 export const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`);

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { RESOURCE_INFO } from '../game/constants';
-import type { ResourceKey } from '../game/types';
+import { RESOURCE_INFO } from '../../game/constants';
+import type { ResourceKey } from '../../game/types';
 import { Modal } from './Modal';
 
 interface Props {
@@ -65,10 +65,24 @@ export function AmountDialog({ resource, playerName, current, onApply, onClose }
           onChange={(e) => setCustom(e.target.value)}
           aria-label="Cantidad personalizada"
         />
-        <button className="btn ghost" disabled={!customValue} onClick={() => { add(-customValue); setCustom(''); }}>
+        <button
+          className="btn ghost"
+          disabled={!customValue}
+          onClick={() => {
+            add(-customValue);
+            setCustom('');
+          }}
+        >
           Gastar
         </button>
-        <button className="btn" disabled={!customValue} onClick={() => { add(customValue); setCustom(''); }}>
+        <button
+          className="btn"
+          disabled={!customValue}
+          onClick={() => {
+            add(customValue);
+            setCustom('');
+          }}
+        >
           Ganar
         </button>
       </div>

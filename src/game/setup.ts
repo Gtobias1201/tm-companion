@@ -1,4 +1,11 @@
-import { DEFAULT_CARD_COST, DEFAULT_GREENERY_COST, DEFAULT_STEEL_VALUE, DEFAULT_TITANIUM_VALUE, DISCOUNT_CARDS, LIMITS } from './constants';
+import {
+  DEFAULT_CARD_COST,
+  DEFAULT_GREENERY_COST,
+  DEFAULT_STEEL_VALUE,
+  DEFAULT_TITANIUM_VALUE,
+  DISCOUNT_CARDS,
+  LIMITS,
+} from './constants';
 import type { BoardId } from './boards';
 import { MAX_INITIAL_CARDS, PRELUDES_PER_PLAYER, findCorporation, findPrelude, type PreludeDef } from './catalog';
 import { placeOcean, raiseOxygen, raiseTemperature } from './globals';
@@ -127,7 +134,13 @@ function applySetup(g: Game, p: Player, s: PlayerSetup, withPreludes: boolean) {
     if (corp.cardCost !== undefined) p.cardCost = corp.cardCost;
     const discount = DISCOUNT_CARDS.find((d) => d.id === corp.discountId);
     if (discount) {
-      p.discounts.push({ id: uid(), cardId: discount.id, name: discount.name, amount: discount.amount, scope: discount.scope });
+      p.discounts.push({
+        id: uid(),
+        cardId: discount.id,
+        name: discount.name,
+        amount: discount.amount,
+        scope: discount.scope,
+      });
     }
     log(g, `${p.name}: corporación ${corp.name} (${corp.startingMC} M€)`);
   }

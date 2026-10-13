@@ -59,5 +59,4 @@ export const TURN_ACTIONS: ReadonlySet<Action['type']> = new Set([
 ]);
 
 /** Cambios que no se guardan en el historial de deshacer. */
-export const isViewOnly = (a: Action) =>
-  a.type === 'setActive' || a.type === 'dismissNotice' || a.type === 'dismissReminder';
+export const isViewOnly = (a: Action) => a.type === 'setActive' || a.type === 'dismissNotice' || a.type === 'dismissReminder';

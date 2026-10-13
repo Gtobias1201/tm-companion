@@ -8,10 +8,10 @@ import {
   expansionsOf,
   findCorporation,
   findPrelude,
-} from '../game/catalog';
-import { DISCOUNT_CARDS, scopeLabel } from '../game/constants';
-import { setupBalance, setupProblems, type PlayerSetup } from '../game';
-import { ColorPicker } from './ColorPicker';
+} from '../../game/catalog';
+import { DISCOUNT_CARDS, scopeLabel } from '../../game/constants';
+import { setupBalance, setupProblems, type PlayerSetup } from '../../game';
+import { ColorPicker } from '../ui/ColorPicker';
 
 interface Props {
   setup: PlayerSetup;
@@ -93,7 +93,11 @@ export function PlayerSetupCard({
           <span>
             {describeEffects({
               ...corp,
-              discount: discount && { amount: discount.amount, scope: discount.scope, label: scopeLabel(discount.scope) },
+              discount: discount && {
+                amount: discount.amount,
+                scope: discount.scope,
+                label: scopeLabel(discount.scope),
+              },
             })}
           </span>
           {corp.note && <small className="muted">{corp.note}</small>}
@@ -102,11 +106,7 @@ export function PlayerSetupCard({
         <div className="row">
           <label className="field grow">
             <span>Nombre de la corporación</span>
-            <input
-              placeholder="Opcional"
-              value={setup.corporation}
-              onChange={(e) => onChange({ corporation: e.target.value })}
-            />
+            <input placeholder="Opcional" value={setup.corporation} onChange={(e) => onChange({ corporation: e.target.value })} />
           </label>
           <label className="field narrow">
             <span>M€ iniciales</span>

@@ -6,20 +6,11 @@ import {
   IconHelp,
   IconHistory,
   IconPlanet,
-  IconX,
 } from '@tabler/icons-react';
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
-import { SOLO_GENERATIONS, colorHex } from '../game/constants';
-import {
-  ACTIONS_PER_TURN,
-  firstPlayer,
-  isLastGeneration,
-  isSolo,
-  isTerraformed,
-  scoreOf,
-  type Action,
-} from '../game';
-import type { Game } from '../game/types';
+import { useEffect, useState, type ReactNode } from 'react';
+import { SOLO_GENERATIONS } from '../../game/constants';
+import { isLastGeneration, isSolo, isTerraformed, type Action } from '../../game';
+import type { Game } from '../../game/types';
 import { GlobalsPanel } from './GlobalsPanel';
 import { PlayerBoard } from './PlayerBoard';
 import { ProductionDialog } from './ProductionDialog';
@@ -28,7 +19,9 @@ import { ResearchDialog } from './ResearchDialog';
 import { MilestonesPanel } from './MilestonesPanel';
 import { ScorePanel } from './ScorePanel';
 import { FinalPhase } from './FinalPhase';
-import { Guide } from './Guide';
+import { Guide } from '../guide/Guide';
+import { PlayerTabs, TableStrip } from './PlayerTabs';
+import { TurnNotices } from './TurnNotices';
 
 type View = 'player' | 'milestones' | 'score';
 
@@ -69,32 +62,21 @@ export function GameScreen({ game, canUndo, dispatch, onUndo, onExit, online }: 
 
   const meId = online?.me;
   const active = game.players.find((p) => p.id === (meId ?? game.activePlayerId)) ?? game.players[0];
-  const first = firstPlayer(game);
   const solo = isSolo(game);
   const turnPlayer = game.turn ? game.players.find((p) => p.id === game.turn!.playerId) : undefined;
-  const notice = game.turnNotice && dismissedNotice !== game.log.length ? game.turnNotice : null;
-  const noticePlayer = notice && game.players.find((p) => p.id === notice.playerId);
   const reminder = game.reminder && dismissedReminder !== game.reminder.text ? game.reminder : null;
-  const tabsRef = useRef<HTMLElement>(null);
   const playing = game.phase === 'playing';
   const lastGeneration = isLastGeneration(game);
   const myResearchPending = game.researchPending && (!meId || !game.researchDone.includes(meId));
-  const researchWaiting = game.players.filter((p) => !game.researchDone.includes(p.id)).map((p) => p.name);
   // Online, la producción se aplica recién cuando todos pasaron
   const canProduce = playing && (!online || !game.turn);
-
-  // Mantiene visible la pestaña del jugador seleccionado cuando el turno pasa solo
-  useEffect(() => {
-    tabsRef.current?.querySelector('.player-tab.active')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-  }, [active.id]);
 
   // Online, cada uno compra sus cartas apenas empieza la generación
   useEffect(() => {
     if (online && myResearchPending) setDialog('research');
   }, [online, myResearchPending, game.generation]);
 
-  const dismissNotice = () =>
-    online ? setDismissedNotice(game.log.length) : dispatch({ type: 'dismissNotice' });
+  const dismissNotice = () => (online ? setDismissedNotice(game.log.length) : dispatch({ type: 'dismissNotice' }));
   const dismissReminder = () =>
     online ? setDismissedReminder(game.reminder?.text ?? null) : dispatch({ type: 'dismissReminder' });
 
@@ -137,8 +119,7 @@ export function GameScreen({ game, canUndo, dispatch, onUndo, onExit, online }: 
 
       {playing && isTerraformed(game) && (
         <div className="banner">
-          <IconPlanet size={18} /> ¡Marte terraformado! Es la última generación: después de la producción termina la
-          partida.
+          <IconPlanet size={18} /> ¡Marte terraformado! Es la última generación: después de la producción termina la partida.
         </div>
       )}
       {playing && solo && !isTerraformed(game) && game.generation >= SOLO_GENERATIONS && (
@@ -158,47 +139,17 @@ export function GameScreen({ game, canUndo, dispatch, onUndo, onExit, online }: 
 
       {playing && (
         <>
-          {notice && noticePlayer && (
-            <div className="notice" role="status">
-              <span className="grow">
-                {notice.reason === 'actions' && `${noticePlayer.name} completó ${ACTIONS_PER_TURN} acciones.`}
-                {notice.reason === 'end' && `${noticePlayer.name} terminó su turno.`}
-                {notice.reason === 'pass' && `${noticePlayer.name} pasó.`}{' '}
-                {turnPlayer ? (turnPlayer.id === meId ? 'Te toca a vos.' : `Ahora juega ${turnPlayer.name}.`) : 'Todos pasaron.'}
-              </span>
-              {!online && notice.reason !== 'pass' && noticePlayer.id !== active.id && (
-                <button className="btn small" onClick={() => dispatch({ type: 'setActive', playerId: noticePlayer.id })}>
-                  Ver {noticePlayer.name}
-                </button>
-              )}
-              <button className="icon-btn mini" aria-label="Cerrar aviso" onClick={dismissNotice}>
-                <IconX size={16} />
-              </button>
-            </div>
-          )}
-          {myResearchPending && dialog !== 'research' && (
-            <div className="notice" role="status">
-              <span className="grow">
-                {online ? 'Te falta comprar tus cartas' : 'Falta la fase de investigación'} de la generación{' '}
-                {game.generation}.
-              </span>
-              <button className="btn small primary" onClick={() => setDialog('research')}>
-                Comprar cartas
-              </button>
-            </div>
-          )}
-          {online && game.researchPending && !myResearchPending && (
-            <div className="notice" role="status">
-              <span className="grow">Esperando que compren sus cartas: {researchWaiting.join(', ')}.</span>
-            </div>
-          )}
-          {!game.turn && (
-            <div className="banner warn">
-              {lastGeneration
-                ? 'Todos pasaron. Aplicá la producción final para terminar la partida.'
-                : `Todos pasaron. Aplicá la fase de producción para empezar la generación ${game.generation + 1}.`}
-            </div>
-          )}
+          <TurnNotices
+            game={game}
+            activeId={active.id}
+            meId={meId}
+            online={!!online}
+            showNotice={dismissedNotice !== game.log.length}
+            myResearchPending={myResearchPending && dialog !== 'research'}
+            dispatch={dispatch}
+            onDismissNotice={dismissNotice}
+            onResearch={() => setDialog('research')}
+          />
 
           <div className="segmented three" role="tablist" aria-label="Vista">
             {VIEWS.map((v) => (
@@ -217,33 +168,9 @@ export function GameScreen({ game, canUndo, dispatch, onUndo, onExit, online }: 
           {view === 'player' && <GlobalsPanel game={game} active={active} dispatch={dispatch} />}
 
           {/* Online, la mesa se ve en "Puntos" para que la vista principal entre en una pantalla */}
-          {online ? (
-            view === 'score' && <TableStrip game={game} me={online.me} />
-          ) : (
-            game.players.length > 1 && (
-              <nav className="player-tabs" aria-label="Jugadores" ref={tabsRef}>
-                {game.players.map((p) => (
-                  <button
-                    key={p.id}
-                    className={`player-tab ${p.id === active.id ? 'active' : ''} ${game.passed.includes(p.id) ? 'passed' : ''}`}
-                    style={{ '--p-color': colorHex(p.color) } as CSSProperties}
-                    onClick={() => dispatch({ type: 'setActive', playerId: p.id })}
-                  >
-                    <span className="dot" />
-                    <span className="player-tab-name">{p.name}</span>
-                    <span className="player-tab-tr">{p.tr}</span>
-                    <TurnDots game={game} playerId={p.id} />
-                    {game.passed.includes(p.id) && <span className="tab-passed">pasó</span>}
-                    {p.id === first.id && (
-                      <span className="first-badge" title="Jugador inicial de esta generación">
-                        1º
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </nav>
-            )
-          )}
+          {online
+            ? view === 'score' && <TableStrip game={game} me={online.me} />
+            : game.players.length > 1 && <PlayerTabs game={game} activeId={active.id} dispatch={dispatch} />}
 
           {view === 'player' && <PlayerBoard key={active.id} game={game} player={active} dispatch={dispatch} />}
           {view === 'milestones' && <MilestonesPanel game={game} active={active} dispatch={dispatch} />}
@@ -302,43 +229,5 @@ export function GameScreen({ game, canUndo, dispatch, onUndo, onExit, online }: 
       )}
       {guide && <Guide onClose={() => setGuide(false)} />}
     </div>
-  );
-}
-
-function TurnDots({ game, playerId }: { game: Game; playerId: string }) {
-  if (game.turn?.playerId !== playerId) return null;
-  return (
-    <span className="tab-dots" aria-label={`De turno, ${game.turn.actions} de ${ACTIONS_PER_TURN} acciones`}>
-      {Array.from({ length: ACTIONS_PER_TURN }, (_, i) => (
-        <i key={i} className={i < game.turn!.actions ? 'on' : ''} />
-      ))}
-    </span>
-  );
-}
-
-/** La mesa en modo online: TR, PV y turno de todos, sin mostrar sus recursos. */
-function TableStrip({ game, me }: { game: Game; me: string }) {
-  const first = firstPlayer(game);
-  return (
-    <ul className="table-strip" aria-label="Jugadores de la mesa">
-      {game.players.map((p) => (
-        <li
-          key={p.id}
-          className={`table-player ${game.turn?.playerId === p.id ? 'turn' : ''} ${game.passed.includes(p.id) ? 'passed' : ''}`}
-          style={{ '--p-color': colorHex(p.color) } as CSSProperties}
-        >
-          <span className="table-name">
-            <span className="dot" /> {p.id === me ? 'Vos' : p.name}
-            {p.id === first.id && <span className="first-badge">1º</span>}
-          </span>
-          <span className="table-stats">
-            {p.tr} TR · {scoreOf(game, p).total} PV
-          </span>
-          <span className="table-state">
-            {game.passed.includes(p.id) ? 'pasó' : <TurnDots game={game} playerId={p.id} />}
-          </span>
-        </li>
-      ))}
-    </ul>
   );
 }

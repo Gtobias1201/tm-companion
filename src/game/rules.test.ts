@@ -250,7 +250,12 @@ describe('pagos', () => {
 
   it('rechaza pagos que no alcanzan', () => {
     const g = newGame();
-    const pay: Action = { type: 'pay', playerId: p1(g).id, cost: 60, payment: { megacredits: 60, steel: 0, titanium: 0 } };
+    const pay: Action = {
+      type: 'pay',
+      playerId: p1(g).id,
+      cost: 60,
+      payment: { megacredits: 60, steel: 0, titanium: 0 },
+    };
     expect(play(g, pay)).toBe(g);
   });
 });

@@ -71,7 +71,5 @@ export function describePayment(pay: Payment): string {
  * solo aplican descuentos por etiqueta (p. ej. Thorgate en la planta de energía).
  */
 export function applicableDiscounts(p: Player, kind: PurchaseKind, tags: CardTag[]): Discount[] {
-  return p.discounts.filter((d) =>
-    d.scope === 'all' ? kind === 'card' : tags.includes(d.scope),
-  );
+  return p.discounts.filter((d) => (d.scope === 'all' ? kind === 'card' : tags.includes(d.scope)));
 }

@@ -8,10 +8,10 @@ import {
   MILESTONE_VP,
   findBoard,
   type MilestoneDef,
-} from '../game/boards';
-import { colorHex } from '../game/constants';
-import { isTurnOf, type Action } from '../game';
-import type { Game, Player } from '../game/types';
+} from '../../game/boards';
+import { colorHex } from '../../game/constants';
+import { isTurnOf, type Action } from '../../game';
+import type { Game, Player } from '../../game/types';
 
 interface Props {
   game: Game;
@@ -33,9 +33,7 @@ export function MilestonesPanel({ game, active, dispatch }: Props) {
   return (
     <div className="milestones">
       {!canAct && (
-        <p className="hint">
-          Reclamar un hito o financiar un premio es una acción: solo puede hacerlo el jugador de turno.
-        </p>
+        <p className="hint">Reclamar un hito o financiar un premio es una acción: solo puede hacerlo el jugador de turno.</p>
       )}
 
       <section className="ma-section" aria-label="Hitos">
@@ -74,9 +72,7 @@ export function MilestonesPanel({ game, active, dispatch }: Props) {
                     // Los medibles se verifican solos; los demás preguntan el valor antes de reclamar
                     disabled={!canClaim || (m.value !== undefined && !meets) || asking === m.id}
                     onClick={() =>
-                      m.value
-                        ? dispatch({ type: 'claimMilestone', playerId: active.id, milestoneId: m.id })
-                        : setAsking(m.id)
+                      m.value ? dispatch({ type: 'claimMilestone', playerId: active.id, milestoneId: m.id }) : setAsking(m.id)
                     }
                   >
                     Reclamar
@@ -128,9 +124,7 @@ export function MilestonesPanel({ game, active, dispatch }: Props) {
                 ) : (
                   <button
                     className="btn small"
-                    disabled={
-                      !canAct || nextAwardCost === undefined || active.resources.megacredits < nextAwardCost
-                    }
+                    disabled={!canAct || nextAwardCost === undefined || active.resources.megacredits < nextAwardCost}
                     onClick={() => dispatch({ type: 'fundAward', playerId: active.id, awardId: aw.id })}
                   >
                     Financiar
@@ -141,8 +135,8 @@ export function MilestonesPanel({ game, active, dispatch }: Props) {
           );
         })}
         <p className="hint">
-          Los premios se resuelven al final: {AWARD_VP.first} PV al primero y {AWARD_VP.second} al segundo (con 2
-          jugadores solo puntúa el primero).
+          Los premios se resuelven al final: {AWARD_VP.first} PV al primero y {AWARD_VP.second} al segundo (con 2 jugadores solo
+          puntúa el primero).
         </p>
       </section>
     </div>

@@ -1,25 +1,18 @@
-import {
-  IconArrowRight,
-  IconCreditCard,
-  IconFlame,
-  IconPencil,
-  IconTemperature,
-  IconTrees,
-} from '@tabler/icons-react';
+import { IconArrowRight, IconCreditCard, IconFlame, IconPencil, IconTemperature, IconTrees } from '@tabler/icons-react';
 import { useState, type CSSProperties, type ReactNode } from 'react';
-import { findCorporation } from '../game/catalog';
-import { GLOBAL_INFO, HEAT_PER_TEMPERATURE, LIMITS, colorHex } from '../game/constants';
-import { isTurnOf, productionMin, type Action, type TileKind } from '../game';
-import { RESOURCES, type Game, type Player, type ResourceKey } from '../game/types';
+import { findCorporation } from '../../game/catalog';
+import { GLOBAL_INFO, HEAT_PER_TEMPERATURE, LIMITS, colorHex } from '../../game/constants';
+import { isTurnOf, productionMin, type Action, type TileKind } from '../../game';
+import { RESOURCES, type Game, type Player, type ResourceKey } from '../../game/types';
 import { ResourceCard } from './ResourceCard';
-import { AmountDialog } from './AmountDialog';
+import { AmountDialog } from '../ui/AmountDialog';
 import { PlayerEditDialog } from './PlayerEditDialog';
 import { PaymentDialog } from './PaymentDialog';
 import { DiscountsPanel } from './DiscountsPanel';
 import { TurnPanel } from './TurnPanel';
-import { Modal } from './Modal';
-import { SingleTileIcon, TileIcon } from './icons';
-import { useSwipeToLower } from './useSwipeToLower';
+import { Modal } from '../ui/Modal';
+import { SingleTileIcon, TileIcon } from '../ui/icons';
+import { useSwipeToLower } from '../ui/useSwipeToLower';
 
 interface Props {
   game: Game;
@@ -147,7 +140,11 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
           >
             Sumar o gastar M€ a mano
           </button>
-          {corpNote && <p className="note">{player.corporation}: {corpNote}</p>}
+          {corpNote && (
+            <p className="note">
+              {player.corporation}: {corpNote}
+            </p>
+          )}
           <DiscountsPanel player={player} dispatch={dispatch} />
         </Modal>
       )}
@@ -220,8 +217,8 @@ function TilesSheet({ game, onPlace, onClose }: { game: Game; onPlace: (tile: Ti
   return (
     <Modal title="Colocar loseta" onClose={onClose}>
       <p className="note">
-        Para losetas que coloca una carta de proyecto. No gasta una acción: la acción fue jugar la carta. Los
-        bonus del espacio (acero, plantas, cartas) se cargan a mano.
+        Para losetas que coloca una carta de proyecto. No gasta una acción: la acción fue jugar la carta. Los bonus del espacio
+        (acero, plantas, cartas) se cargan a mano.
       </p>
       <div className="tile-options">
         {options.map((o) => (

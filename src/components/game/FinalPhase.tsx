@@ -1,9 +1,9 @@
 import { IconTrees, IconTrophy } from '@tabler/icons-react';
 import type { CSSProperties } from 'react';
-import { AWARD_VP } from '../game/boards';
-import { colorHex } from '../game/constants';
-import { awardResults, finalRanking, firstPlayer, isSolo, soloWon, type Action } from '../game';
-import type { Game, Player } from '../game/types';
+import { AWARD_VP } from '../../game/boards';
+import { colorHex } from '../../game/constants';
+import { awardResults, finalRanking, firstPlayer, isSolo, soloWon, type Action } from '../../game';
+import type { Game, Player } from '../../game/types';
 import { ScoreCounters } from './ScoreCounters';
 
 interface Props {
@@ -54,9 +54,7 @@ function turnOrder(game: Game): Player[] {
 function FinalGreenery({ game, dispatch, me, isHost }: Props) {
   return (
     <>
-      <p className="note">
-        En orden de turno, cada jugador puede convertir sus plantas en bosques. Cada bosque da 1 PV.
-      </p>
+      <p className="note">En orden de turno, cada jugador puede convertir sus plantas en bosques. Cada bosque da 1 PV.</p>
       <section className="final-card">
         {turnOrder(game).map((p) => {
           const possible = Math.floor(p.resources.plants / p.greeneryCost);
@@ -179,36 +177,32 @@ function Scoring({ game, dispatch, me, isHost }: Props) {
         </section>
       )}
 
-      {game.players.filter((p) => controls(me, p.id)).map((p) => (
-        <section key={p.id} className="score-counters" style={{ '--p-color': colorHex(p.color) } as CSSProperties}>
-          <h2 className="final-name">
-            <span className="dot" /> {p.name}
-          </h2>
-          <ScoreCounters
-            player={p}
-            dispatch={dispatch}
-            keys={['greeneries', 'cityPoints', 'cardPoints', 'jovianCards', 'jovianTags']}
-          />
-        </section>
-      ))}
+      {game.players
+        .filter((p) => controls(me, p.id))
+        .map((p) => (
+          <section key={p.id} className="score-counters" style={{ '--p-color': colorHex(p.color) } as CSSProperties}>
+            <h2 className="final-name">
+              <span className="dot" /> {p.name}
+            </h2>
+            <ScoreCounters
+              player={p}
+              dispatch={dispatch}
+              keys={['greeneries', 'cityPoints', 'cardPoints', 'jovianCards', 'jovianTags']}
+            />
+          </section>
+        ))}
 
       <ResultTable game={game} />
 
       {canAdvance(me, isHost) ? (
         <>
-          <button
-            className="btn primary block"
-            disabled={incomplete}
-            onClick={() => dispatch({ type: 'advancePhase' })}
-          >
+          <button className="btn primary block" disabled={incomplete} onClick={() => dispatch({ type: 'advancePhase' })}>
             Terminar partida
           </button>
           {incomplete && <p className="note">Completá los valores de los premios para terminar.</p>}
         </>
       ) : (
-        <p className="note">
-          Completá tus valores y tus puntos. El anfitrión termina la partida cuando todos estén listos.
-        </p>
+        <p className="note">Completá tus valores y tus puntos. El anfitrión termina la partida cuando todos estén listos.</p>
       )}
     </>
   );

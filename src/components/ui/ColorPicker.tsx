@@ -1,4 +1,4 @@
-import { PLAYER_COLORS } from '../game/constants';
+import { PLAYER_COLORS } from '../../game/constants';
 
 export function ColorPicker({ value, onChange }: { value: string; onChange: (id: string) => void }) {
   return (

@@ -1,0 +1,158 @@
+/* ---------- Parámetros globales (fila compacta) ---------- */
+.globals { display: flex; flex-direction: column; }
+.gauges { display: grid; gap: 6px; }
+/* Contenedor que recorta el deslizamiento y muestra el "−1" detrás del medidor */
+.gauge-swipe { position: relative; min-width: 0; border-radius: var(--radius-sm); overflow: hidden; background: var(--accent-soft); }
+.gauge-under {
+  position: absolute; inset: 0 8px 0 auto; display: grid; place-items: center;
+  font-weight: 700; font-size: 0.9rem; color: var(--accent-text);
+}
+.gauge-swipe.armed .gauge-under { color: var(--danger); }
+/* Todo el recuadro es el botón de subir */
+.gauge {
+  position: relative; width: 100%; text-align: left; cursor: pointer; font: inherit; color: inherit;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 6px 6px 7px 7px; display: flex; flex-direction: column; gap: 5px; min-width: 0;
+  touch-action: pan-y; user-select: none; -webkit-user-select: none;
+  transition: transform 0.18s ease, background-color 0.15s ease;
+}
+.gauge:active:not([aria-disabled='true']) { background: color-mix(in srgb, var(--g-color) 10%, var(--surface)); }
+.gauge[aria-disabled='true'] { cursor: default; }
+.gauge.maxed { border-color: var(--g-color); }
+.gauge-top { display: flex; justify-content: space-between; align-items: center; gap: 4px; }
+.gauge-label { display: inline-flex; align-items: center; gap: 4px; color: var(--g-color); min-width: 0; }
+.gauge-value { font-size: 1rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.gauge-plus {
+  width: 22px; height: 22px; flex-shrink: 0; display: grid; place-items: center;
+  border-radius: 6px; color: var(--g-color); font-size: 0.75rem; font-weight: 700;
+  background: color-mix(in srgb, var(--g-color) 14%, var(--surface));
+}
+.bar { display: block; height: 4px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.bar-fill { display: block; height: 100%; background: var(--g-color); border-radius: 99px; transition: width 0.25s ease; }
+
+/* ---------- Pestañas de jugadores ---------- */
+.player-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+.player-tabs::-webkit-scrollbar { display: none; }
+.player-tab {
+  display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+  min-height: 40px; padding: 0 14px;
+  border-radius: 999px; border: 1px solid var(--border); background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+}
+.player-tab .dot { background: var(--p-color); }
+.player-tab.active { background: var(--text); border-color: var(--text); color: var(--bg); }
+.player-tab-name { max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.player-tab-tr { font-weight: 600; font-variant-numeric: tabular-nums; }
+.first-badge { font-size: 0.68rem; background: var(--accent); color: var(--on-accent); border-radius: 99px; padding: 1px 6px; }
+
+/* ---------- Tablero del jugador ---------- */
+.player-board { display: flex; flex-direction: column; gap: 8px; }
+.player-line { display: flex; align-items: center; gap: 8px; min-height: 36px; }
+.player-line .dot { background: var(--p-color); }
+.player-line-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 0.95rem; }
+.tr-plate {
+  display: inline-flex; align-items: baseline; gap: 5px; cursor: pointer;
+  background: #f6c443; color: #4a2a00; border: 2px solid #b07d10; border-radius: 7px; padding: 2px 9px;
+  touch-action: pan-y; user-select: none; -webkit-user-select: none;
+  transition: transform 0.18s ease, filter 0.15s ease;
+}
+.tr-plate:active { filter: brightness(0.94); }
+/* Igual que los medidores: deslizar la placa descubre el "−1" detrás */
+.tr-swipe { position: relative; flex-shrink: 0; border-radius: 7px; overflow: hidden; background: var(--accent-soft); }
+.tr-swipe .gauge-under { inset: 0 6px 0 auto; font-size: 0.8rem; }
+.tr-swipe.armed .gauge-under { color: var(--danger); }
+.tr-plate span { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.05em; }
+.tr-plate b { font-size: 1.15rem; font-variant-numeric: tabular-nums; }
+.stepper { display: flex; align-items: center; gap: 10px; }
+.stepper-value { color: var(--text); min-width: 2ch; text-align: center; font-size: 1.3rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ---------- Recursos con la estética del tablero de jugador ----------
+   Colores fijos (no dependen del tema), como el cartón del tablero físico. */
+.board { background: var(--board); border: 3px solid var(--board-border); border-radius: 14px; padding: 6px; }
+/* 3×2 como el tablero físico: entra entero en la pantalla del celular */
+.res-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+.board-legend { margin: 5px 2px 0; font-size: 0.68rem; color: var(--board-legend); text-align: center; }
+
+.res-card {
+  --tile: #888; --tile-fg: #fff;
+  background: var(--card); border: 2px solid var(--card-border); border-radius: 8px;
+  box-shadow: inset 0 0 0 1px var(--card-inner);
+  padding: 4px; display: flex; flex-direction: column; gap: 4px; color: var(--card-text); min-width: 0;
+}
+.res-megacredits { --tile: #f6c443; --tile-fg: #7a4b00; }
+.res-steel { --tile: #9a6033; --tile-fg: #fff1e0; }
+.res-titanium { --tile: #2f3236; --tile-fg: #f6c443; }
+.res-plants { --tile: #5fae3a; --tile-fg: #173404; }
+.res-energy { --tile: #7b2fa0; --tile-fg: #ffffff; }
+.res-heat { --tile: #e0482a; --tile-fg: #ffe066; }
+
+/* Franja de color a todo el ancho, como la ilustración de cada recurso del tablero:
+   ícono (y valor del acero/titanio) a la izquierda, producción con − / + a la derecha */
+.res-band {
+  display: flex; align-items: center; justify-content: space-between; gap: 2px;
+  height: 32px; padding: 0 3px; border-radius: 5px; min-width: 0;
+  background: var(--tile); color: var(--tile-fg); border: 1.5px solid rgba(0, 0, 0, 0.25);
+}
+/* El valor del acero/titanio va debajo del ícono para no restarle ancho a la producción */
+.res-band-icon { display: inline-flex; flex-direction: column; align-items: center; flex-shrink: 0; line-height: 1; }
+.res-band-icon svg { width: 16px; height: 16px; flex-shrink: 0; }
+.mc-glyph { font-weight: 700; font-size: 0.7rem; letter-spacing: -0.02em; }
+.res-card .mc-glyph { font-size: 0.78rem; }
+.res-worth { font-size: 0.6rem; font-weight: 700; }
+
+.res-prod { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.res-prod-step {
+  width: 15px; height: 24px; padding: 0; border: none; border-radius: 4px; cursor: pointer;
+  background: rgba(0, 0, 0, 0.28); color: #fff; font-size: 0.85rem; font-weight: 600; line-height: 1;
+}
+.res-prod-step:disabled { opacity: 0.35; cursor: not-allowed; }
+.res-prod-value {
+  min-width: 22px; height: 24px; padding: 0 2px; display: grid; place-items: center;
+  background: var(--prod-cell); color: var(--prod-cell-text); border-radius: 4px;
+  font-weight: 700; font-size: 0.78rem; font-variant-numeric: tabular-nums;
+}
+.res-prod-value.neg { color: var(--danger); }
+
+/* Stock: visor oscuro, el protagonista de la tarjeta */
+.res-stock { display: flex; align-items: center; gap: 3px; }
+.res-card .res-stock .step { width: 24px; height: 40px; font-size: 1rem; border-radius: 5px; background: var(--disp); border-color: var(--disp); color: var(--disp-text); }
+.res-value {
+  flex: 1; min-width: 0; height: 40px; padding: 0; border: none; border-radius: 5px; cursor: pointer;
+  background: var(--disp); color: var(--disp-text);
+  font-size: 1.45rem; font-weight: 600; font-variant-numeric: tabular-nums;
+}
+.res-value:hover { background: var(--disp-hover); }
+
+/* Conversiones dentro de su recurso */
+.res-action {
+  margin-top: auto;
+  display: flex; align-items: center; justify-content: center; gap: 3px;
+  min-height: 28px; padding: 0 2px; border: none; border-radius: 5px; cursor: pointer;
+  font-size: 0.68rem; font-weight: 600; color: #fff; white-space: nowrap;
+}
+.res-megacredits .res-action { background: #b07d10; }
+.res-plants .res-action { background: #3b6d11; }
+.res-heat .res-action { background: #a32d2d; }
+/* Flecha dorada de energía a calor, como la del tablero; ocupa el hueco de la acción */
+.energy-flow {
+  margin-top: auto;
+  display: flex; align-items: center; justify-content: center; gap: 2px;
+  min-height: 28px; padding-right: 8px;
+  background: #f6c443; color: #4a2a00;
+  font-size: 0.8rem; font-weight: 700; font-variant-numeric: tabular-nums;
+  clip-path: polygon(0 0, 84% 0, 100% 50%, 84% 100%, 0 100%);
+  border-radius: 5px 0 0 5px;
+}
+.energy-flow svg:first-of-type { color: #a32d2d; }
+.res-action:disabled { opacity: 0.45; cursor: not-allowed; }
+.res-action-badge { background: rgba(255, 255, 255, 0.25); border-radius: 99px; padding: 0 5px; font-size: 0.62rem; }
+
+/* ---------- Barra inferior ---------- */
+.bottombar {
+  position: fixed; left: 0; right: 0; bottom: 0;
+  display: flex; gap: 10px;
+  padding: 12px max(16px, calc((100vw - 720px) / 2 + 16px)) calc(12px + env(safe-area-inset-bottom));
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}

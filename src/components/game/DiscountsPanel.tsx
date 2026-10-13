@@ -1,8 +1,8 @@
 import { IconX } from '@tabler/icons-react';
 import { useState } from 'react';
-import { DISCOUNT_CARDS, TAG_INFO, scopeLabel } from '../game/constants';
-import type { Action } from '../game';
-import { CARD_TAGS, type DiscountScope, type Player } from '../game/types';
+import { DISCOUNT_CARDS, TAG_INFO, scopeLabel } from '../../game/constants';
+import type { Action } from '../../game';
+import { CARD_TAGS, type DiscountScope, type Player } from '../../game/types';
 
 interface Props {
   player: Player;
@@ -83,10 +83,7 @@ export function DiscountsPanel({ player, dispatch }: Props) {
             </label>
             <label className="field grow">
               <span>Aplica a</span>
-              <select
-                value={custom.scope}
-                onChange={(e) => setCustom({ ...custom, scope: e.target.value as DiscountScope })}
-              >
+              <select value={custom.scope} onChange={(e) => setCustom({ ...custom, scope: e.target.value as DiscountScope })}>
                 <option value="all">Todas las cartas</option>
                 {CARD_TAGS.map((t) => (
                   <option key={t} value={t}>

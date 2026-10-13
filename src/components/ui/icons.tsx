@@ -14,7 +14,7 @@ import {
   type Icon,
 } from '@tabler/icons-react';
 import type { ComponentType } from 'react';
-import type { CardTag, GlobalKey, ResourceKey } from '../game/types';
+import type { CardTag, GlobalKey, ResourceKey } from '../../game/types';
 
 type IconComponent = Icon | ComponentType<{ size?: number; stroke?: number }>;
 
@@ -70,7 +70,12 @@ interface IconProps {
 
 export function ResourceIcon({ resource, size = 16 }: IconProps & { resource: ResourceKey }) {
   const I = RESOURCE_ICONS[resource];
-  if (!I) return <span className="mc-glyph" aria-hidden>M€</span>;
+  if (!I)
+    return (
+      <span className="mc-glyph" aria-hidden>
+        M€
+      </span>
+    );
   return <I size={size} stroke={1.75} aria-hidden />;
 }
 

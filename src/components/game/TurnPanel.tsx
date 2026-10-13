@@ -1,6 +1,6 @@
 import { IconLock, IconPlayerSkipForward, IconPlus } from '@tabler/icons-react';
-import { ACTIONS_PER_TURN, isTurnOf, type Action } from '../game';
-import type { Game, Player } from '../game/types';
+import { ACTIONS_PER_TURN, isTurnOf, type Action } from '../../game';
+import type { Game, Player } from '../../game/types';
 
 interface Props {
   game: Game;

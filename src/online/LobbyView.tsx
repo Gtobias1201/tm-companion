@@ -5,7 +5,7 @@ import { findCorporation } from '../game/catalog';
 import { colorHex } from '../game/constants';
 import { setupProblems, type PlayerSetup } from '../game';
 import type { Lobby, LobbyOptions } from '../net/protocol';
-import { PlayerSetupCard } from '../components/PlayerSetupCard';
+import { PlayerSetupCard } from '../components/setup/PlayerSetupCard';
 import { InviteCard } from './InviteCard';
 
 interface Props {

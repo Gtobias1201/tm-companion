@@ -1,5 +1,5 @@
-import { SCORE_LABELS, type Action } from '../game';
-import type { Player, ScoreKey } from '../game/types';
+import { SCORE_LABELS, type Action } from '../../game';
+import type { Player, ScoreKey } from '../../game/types';
 
 const COUNTERS: { key: ScoreKey; hint: string }[] = [
   { key: 'greeneries', hint: '1 PV cada uno · se suman solos al hacer bosques' },

@@ -1,8 +1,8 @@
 import { IconArrowLeft } from '@tabler/icons-react';
 import { useState, type FormEvent } from 'react';
-import { BOARDS, type BoardId } from '../game/boards';
-import { createGame, newPlayerSetup, setupProblems, type PlayerSetup } from '../game';
-import type { Game } from '../game/types';
+import { BOARDS, type BoardId } from '../../game/boards';
+import { createGame, newPlayerSetup, setupProblems, type PlayerSetup } from '../../game';
+import type { Game } from '../../game/types';
 import { PlayerSetupCard } from './PlayerSetupCard';
 
 interface Props {
@@ -10,8 +10,7 @@ interface Props {
   onCancel: () => void;
 }
 
-const defaultName = () =>
-  `Partida ${new Date().toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}`;
+const defaultName = () => `Partida ${new Date().toLocaleDateString(undefined, { day: '2-digit', month: '2-digit' })}`;
 
 /** Partida solitaria, sin conexión. Las partidas de varios jugadores se arman online. */
 export function NewGame({ onCreate, onCancel }: Props) {

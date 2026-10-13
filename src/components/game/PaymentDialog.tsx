@@ -1,9 +1,9 @@
 import { useState, type CSSProperties } from 'react';
-import { RESOURCE_INFO, STANDARD_PROJECTS, TAG_INFO, scopeLabel } from '../game/constants';
-import { applicableDiscounts, bestPayment, canAfford, paymentValue, paymentWith } from '../game';
-import { CARD_TAGS, type CardTag, type Payment, type Player, type PurchaseKind } from '../game/types';
-import { Modal } from './Modal';
-import { ResourceIcon, TagIcon } from './icons';
+import { RESOURCE_INFO, STANDARD_PROJECTS, TAG_INFO, scopeLabel } from '../../game/constants';
+import { applicableDiscounts, bestPayment, canAfford, paymentValue, paymentWith } from '../../game';
+import { CARD_TAGS, type CardTag, type Payment, type Player, type PurchaseKind } from '../../game/types';
+import { Modal } from '../ui/Modal';
+import { ResourceIcon, TagIcon } from '../ui/icons';
 
 export interface PayRequest {
   cost: number;
@@ -62,8 +62,7 @@ export function PaymentDialog({ player, venus, onPay, onClose }: Props) {
     setOverride(null);
   };
 
-  const toggleTag = (t: CardTag) =>
-    resetTo(() => setTags((ts) => (ts.includes(t) ? ts.filter((x) => x !== t) : [...ts, t])));
+  const toggleTag = (t: CardTag) => resetTo(() => setTags((ts) => (ts.includes(t) ? ts.filter((x) => x !== t) : [...ts, t])));
 
   const toggleDiscount = (id: string) =>
     resetTo(() => setSkipped((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id])));
@@ -107,7 +106,12 @@ export function PaymentDialog({ player, venus, onPay, onClose }: Props) {
             role="tab"
             aria-selected={kind === k}
             className={kind === k ? 'on' : ''}
-            onClick={() => resetTo(() => { setKind(k); setSkipped([]); })}
+            onClick={() =>
+              resetTo(() => {
+                setKind(k);
+                setSkipped([]);
+              })
+            }
           >
             {k === 'card' ? 'Carta' : 'Proyecto estándar'}
           </button>
@@ -164,7 +168,12 @@ export function PaymentDialog({ player, venus, onPay, onClose }: Props) {
               role="radio"
               aria-checked={projectId === sp.id}
               className={`project-option ${projectId === sp.id ? 'on' : ''}`}
-              onClick={() => resetTo(() => { setProjectId(sp.id); setSkipped([]); })}
+              onClick={() =>
+                resetTo(() => {
+                  setProjectId(sp.id);
+                  setSkipped([]);
+                })
+              }
             >
               <span>{sp.label}</span>
               <strong>{sp.cost} M€</strong>
@@ -220,7 +229,12 @@ export function PaymentDialog({ player, venus, onPay, onClose }: Props) {
                       tenés {player.resources[r.key]} · aporta {used * r.unit} M€
                     </small>
                   </span>
-                  <button className="step mini" disabled={used <= 0} onClick={() => adjust(r.key, -1)} aria-label={`Usar menos ${info.label}`}>
+                  <button
+                    className="step mini"
+                    disabled={used <= 0}
+                    onClick={() => adjust(r.key, -1)}
+                    aria-label={`Usar menos ${info.label}`}
+                  >
                     −
                   </button>
                   <span className="payment-row-value">{used}</span>
@@ -252,15 +266,11 @@ export function PaymentDialog({ player, venus, onPay, onClose }: Props) {
               No te alcanza: podés aportar como máximo {maxValue} M€, faltan {cost - maxValue}.
             </p>
           )}
-          {best && payment && !affordable && (
-            <p className="payment-warn">Con esa combinación no te alcanzan los M€.</p>
-          )}
+          {best && payment && !affordable && <p className="payment-warn">Con esa combinación no te alcanzan los M€.</p>}
           {affordable && overpay > 0 && (
             <p className="payment-note">Pagás {overpay} M€ de más (el acero y el titanio no dan vuelto).</p>
           )}
-          {kind === 'standard' && (
-            <p className="payment-note">El efecto del proyecto se aplica solo al pagar.</p>
-          )}
+          {kind === 'standard' && <p className="payment-note">El efecto del proyecto se aplica solo al pagar.</p>}
         </div>
       )}
     </Modal>

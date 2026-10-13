@@ -1,8 +1,8 @@
-import { RESOURCE_INFO, colorHex } from '../game/constants';
-import { productionPreview } from '../game';
-import { RESOURCES, type Game } from '../game/types';
-import { Modal } from './Modal';
-import { ResourceIcon } from './icons';
+import { RESOURCE_INFO, colorHex } from '../../game/constants';
+import { productionPreview } from '../../game';
+import { RESOURCES, type Game } from '../../game/types';
+import { Modal } from '../ui/Modal';
+import { ResourceIcon } from '../ui/icons';
 
 interface Props {
   game: Game;

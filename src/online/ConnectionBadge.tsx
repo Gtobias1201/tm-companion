@@ -79,7 +79,10 @@ export function ConnectionAlert({ lost, detail, pending = 0, offline }: AlertPro
           <strong>
             {others} {offline.length === 1 ? 'está desconectado' : 'están desconectados'}
           </strong>
-          <small>Cuando vuelva{offline.length === 1 ? '' : 'n'} a abrir la app se pone{offline.length === 1 ? '' : 'n'} al día solo{offline.length === 1 ? '' : 's'}.</small>
+          <small>
+            Cuando vuelva{offline.length === 1 ? '' : 'n'} a abrir la app se pone{offline.length === 1 ? '' : 'n'} al día solo
+            {offline.length === 1 ? '' : 's'}.
+          </small>
         </div>
       </div>
     );

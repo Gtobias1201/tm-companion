@@ -51,7 +51,13 @@ export const BOARDS: BoardDef[] = [
     milestones: [
       { id: 'terraformer', name: 'Terraformer', description: 'Tener 35 de TR', threshold: 35, value: (p) => p.tr },
       { id: 'mayor', name: 'Mayor', description: 'Tener 3 ciudades', threshold: 3, value: (p) => p.score.cities },
-      { id: 'gardener', name: 'Gardener', description: 'Tener 3 bosques', threshold: 3, value: (p) => p.score.greeneries },
+      {
+        id: 'gardener',
+        name: 'Gardener',
+        description: 'Tener 3 bosques',
+        threshold: 3,
+        value: (p) => p.score.greeneries,
+      },
       {
         id: 'builder',
         name: 'Builder',
@@ -59,7 +65,13 @@ export const BOARDS: BoardDef[] = [
         threshold: 8,
         ask: 'Etiquetas de edificio en juego',
       },
-      { id: 'planner', name: 'Planner', description: 'Tener 16 cartas en la mano', threshold: 16, ask: 'Cartas en tu mano' },
+      {
+        id: 'planner',
+        name: 'Planner',
+        description: 'Tener 16 cartas en la mano',
+        threshold: 16,
+        ask: 'Cartas en tu mano',
+      },
     ],
     awards: [
       { id: 'landlord', name: 'Landlord', description: 'Más losetas en juego' },

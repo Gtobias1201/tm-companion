@@ -1,12 +1,12 @@
 import { IconDeviceMobile, IconMoon, IconSun } from '@tabler/icons-react';
 import { useState } from 'react';
-import { findCorporation } from '../game/catalog';
-import { DEFAULT_CARD_COST, DEFAULT_STEEL_VALUE, DEFAULT_TITANIUM_VALUE } from '../game/constants';
-import { useThemePref, type ThemePref } from '../theme';
-import type { PlayerPatch } from '../game';
-import type { Player } from '../game/types';
-import { ColorPicker } from './ColorPicker';
-import { Modal } from './Modal';
+import { findCorporation } from '../../game/catalog';
+import { DEFAULT_CARD_COST, DEFAULT_STEEL_VALUE, DEFAULT_TITANIUM_VALUE } from '../../game/constants';
+import { useThemePref, type ThemePref } from '../../theme';
+import type { PlayerPatch } from '../../game';
+import type { Player } from '../../game/types';
+import { ColorPicker } from '../ui/ColorPicker';
+import { Modal } from '../ui/Modal';
 
 interface Props {
   player: Player;
@@ -44,7 +44,17 @@ export function PlayerEditDialog({ player, onSave, onClose }: Props) {
           </button>
           <button
             className="btn primary grow"
-            onClick={() => onSave({ name: name.trim() || player.name, corporation: corporation.trim(), color, greeneryCost, steelValue, titaniumValue, cardCost })}
+            onClick={() =>
+              onSave({
+                name: name.trim() || player.name,
+                corporation: corporation.trim(),
+                color,
+                greeneryCost,
+                steelValue,
+                titaniumValue,
+                cardCost,
+              })
+            }
           >
             Guardar
           </button>
@@ -75,8 +85,20 @@ export function PlayerEditDialog({ player, onSave, onClose }: Props) {
         <small className="muted">8 normalmente · 7 con Ecoline</small>
       </label>
       <div className="row">
-        <MetalValue label="Valor del acero (M€)" metal="acero" base={DEFAULT_STEEL_VALUE} value={steelValue} onChange={setSteelValue} />
-        <MetalValue label="Valor del titanio (M€)" metal="titanio" base={baseTitanium} value={titaniumValue} onChange={setTitaniumValue} />
+        <MetalValue
+          label="Valor del acero (M€)"
+          metal="acero"
+          base={DEFAULT_STEEL_VALUE}
+          value={steelValue}
+          onChange={setSteelValue}
+        />
+        <MetalValue
+          label="Valor del titanio (M€)"
+          metal="titanio"
+          base={baseTitanium}
+          value={titaniumValue}
+          onChange={setTitaniumValue}
+        />
       </div>
       <small className="muted">Normal: acero 2 y titanio 3 · Phobolog: titanio 4 · Advanced Alloys: +1 a ambos</small>
       <label className="field">

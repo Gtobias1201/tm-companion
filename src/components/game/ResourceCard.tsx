@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { RESOURCE_INFO } from '../game/constants';
-import type { ResourceKey } from '../game/types';
-import { ResourceIcon } from './icons';
+import { RESOURCE_INFO } from '../../game/constants';
+import type { ResourceKey } from '../../game/types';
+import { ResourceIcon } from '../ui/icons';
 
 interface Props {
   resource: ResourceKey;

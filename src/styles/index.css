@@ -1,0 +1,10 @@
+/* Estilos de la app, en el orden en que se aplican (el orden importa para la cascada). */
+@import './theme.css';
+@import './controls.css';
+@import './board.css';
+@import './dialogs.css';
+@import './setup.css';
+@import './scoring.css';
+@import './online.css';
+@import './tiles.css';
+@import './guide.css';
