@@ -5,6 +5,7 @@ import { isTerraformed } from '../game';
 import type { Game } from '../game/types';
 import type { ClientSession } from '../online/session';
 import { GUIDE_TOPIC_COUNT, Guide } from './guide/Guide';
+import { UpdateBanner } from './UpdateBanner';
 
 interface Props {
   games: Game[];
@@ -29,6 +30,8 @@ export function Home({ games, clientSession, onHost, onJoin, onSolo, onRejoin, o
           <p className="muted">Recursos, producción y terraformación de tu partida de Terraforming Mars.</p>
         </div>
       </header>
+
+      <UpdateBanner />
 
       <div className="home-actions">
         <button className="btn primary block" onClick={onHost}>

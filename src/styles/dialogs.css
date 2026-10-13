@@ -188,3 +188,8 @@
 .card-picker button.on { background: var(--accent); color: var(--on-accent); }
 .card-picker button:disabled { opacity: 0.3; cursor: not-allowed; }
 .research-foot { color: var(--text); }
+
+/* Aviso de versión nueva de la app de Android (inicio) */
+.update-banner { background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.update-banner > svg { color: var(--accent-text); flex-shrink: 0; }
+.update-banner .grow { display: flex; flex-direction: column; gap: 2px; }

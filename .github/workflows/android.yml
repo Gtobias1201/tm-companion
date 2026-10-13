@@ -33,6 +33,9 @@ jobs:
       - run: ./gradlew assembleDebug --no-daemon
         working-directory: android
       - run: cp android/app/build/outputs/apk/debug/app-debug.apk tm-companion.apk
+      # La app instalada compara este número con el suyo (versionCode) para avisar que hay una nueva
+      - run: |
+          echo "{\"build\": $GITHUB_RUN_NUMBER}" > version.json
       - uses: actions/upload-artifact@v4
         with:
           name: tm-companion-apk
@@ -44,7 +47,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete android --yes --cleanup-tag || true
-          gh release create android tm-companion.apk \
+          gh release create android tm-companion.apk version.json \
             --target "$GITHUB_SHA" \
             --title "App de Android (última versión)" \
             --notes "APK de prueba generado desde main (build $GITHUB_RUN_NUMBER). Abrí este link desde el celular, bajá tm-companion.apk e instalalo. Cada versión nueva se instala encima de la anterior sin perder las partidas."
