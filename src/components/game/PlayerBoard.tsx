@@ -106,7 +106,7 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
 
       {/* Placa con la estética del tablero de jugador */}
       <div className="board">
-        <div className="res-grid">
+        <div className="res-grid" data-tour="resources">
           {RESOURCES.map((k) => (
             <ResourceCard
               key={k}
@@ -239,7 +239,7 @@ function TilesSheet({ game, onPlace, onClose }: { game: Game; onPlace: (tile: Ti
 function TrPlate({ tr, onRaise, onLower }: { tr: number; onRaise: () => void; onLower: () => void }) {
   const { offset, armed, handlers } = useSwipeToLower({ onRaise, onLower, canRaise: true, canLower: tr > 0 });
   return (
-    <div className={`tr-swipe ${armed ? 'armed' : ''}`}>
+    <div className={`tr-swipe ${armed ? 'armed' : ''}`} data-tour="tr">
       <span className="gauge-under" aria-hidden>
         −1
       </span>

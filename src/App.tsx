@@ -7,6 +7,8 @@ import { GameScreen } from './components/game/GameScreen';
 import { JoinScreen } from './online/JoinScreen';
 import { currentClientId, loadClientSession, rememberClientId } from './online/session';
 import { normalizeCode } from './net/protocol';
+import { Tour } from './components/tour/Tour';
+import { tourSeen } from './components/tour/steps';
 
 // El modo online (PeerJS, QR) se descarga recién al usarlo: la app abre más rápido para jugar solo
 const OnlineHost = lazy(() => import('./online/OnlineHost').then((m) => ({ default: m.OnlineHost })));
@@ -37,6 +39,10 @@ export function App() {
   const [state, dispatch] = useReducer(appReducer, undefined, loadState);
   const [screen, setScreen] = useState<Screen>(INITIAL_SCREEN);
   const home = () => setScreen({ kind: 'home' });
+  // El recorrido arranca solo la primera vez, en un celular sin partidas (no al abrir una invitación)
+  const [touring, setTouring] = useState(
+    () => INITIAL_SCREEN.kind === 'home' && Object.keys(state.games).length === 0 && !loadClientSession() && !tourSeen(),
+  );
 
   const latest = useRef(state);
   latest.current = state;
@@ -102,21 +108,7 @@ export function App() {
       );
   }
 
-  // Partidas locales: solitario (y partidas de un solo celular guardadas antes del modo online)
-  const game = state.currentId ? state.games[state.currentId] : null;
-  if (game) {
-    return (
-      <GameScreen
-        game={game}
-        canUndo={(state.undo[game.id]?.length ?? 0) > 0}
-        dispatch={(action) => dispatch({ type: 'game', action })}
-        onUndo={() => dispatch({ type: 'undo' })}
-        onExit={() => dispatch({ type: 'close' })}
-      />
-    );
-  }
-
-  return (
+  const homeView = (
     <Home
       games={Object.values(state.games).sort((a, b) => b.updatedAt - a.updatedAt)}
       clientSession={loadClientSession()}
@@ -134,8 +126,26 @@ export function App() {
         else dispatch({ type: 'open', id });
       }}
       onDelete={(id) => dispatch({ type: 'delete', id })}
+      onTour={() => setTouring(true)}
     />
   );
+  if (touring) return <Tour home={homeView} onClose={() => setTouring(false)} />;
+
+  // Partidas locales: solitario (y partidas de un solo celular guardadas antes del modo online)
+  const game = state.currentId ? state.games[state.currentId] : null;
+  if (game) {
+    return (
+      <GameScreen
+        game={game}
+        canUndo={(state.undo[game.id]?.length ?? 0) > 0}
+        dispatch={(action) => dispatch({ type: 'game', action })}
+        onUndo={() => dispatch({ type: 'undo' })}
+        onExit={() => dispatch({ type: 'close' })}
+      />
+    );
+  }
+
+  return homeView;
 }
 
 function Loading() {

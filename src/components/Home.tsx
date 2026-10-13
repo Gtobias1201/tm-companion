@@ -17,9 +17,10 @@ interface Props {
   onRejoin: (session: ClientSession) => void;
   onOpen: (id: string) => void;
   onDelete: (id: string) => void;
+  onTour: () => void;
 }
 
-export function Home({ games, clientSession, onHost, onJoin, onSolo, onRejoin, onOpen, onDelete }: Props) {
+export function Home({ games, clientSession, onHost, onJoin, onSolo, onRejoin, onOpen, onDelete, onTour }: Props) {
   const [guide, setGuide] = useState(false);
   return (
     <div className="page">
@@ -33,7 +34,7 @@ export function Home({ games, clientSession, onHost, onJoin, onSolo, onRejoin, o
 
       <UpdateBanner />
 
-      <div className="home-actions">
+      <div className="home-actions" data-tour="play">
         <button className="btn primary block" onClick={onHost}>
           <IconWifi size={18} /> Crear partida online
         </button>
@@ -103,7 +104,15 @@ export function Home({ games, clientSession, onHost, onJoin, onSolo, onRejoin, o
         </ul>
       )}
 
-      {guide && <Guide onClose={() => setGuide(false)} />}
+      {guide && (
+        <Guide
+          onClose={() => setGuide(false)}
+          onTour={() => {
+            setGuide(false);
+            onTour();
+          }}
+        />
+      )}
     </div>
   );
 }
