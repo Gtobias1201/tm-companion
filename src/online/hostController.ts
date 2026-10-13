@@ -9,15 +9,9 @@ import {
   setupProblems,
   type Action,
   type PlayerSetup,
-} from '../game/logic';
+} from '../game';
 import type { Game } from '../game/types';
-import {
-  HOST_CLIENT_ID,
-  MAX_ONLINE_PLAYERS,
-  type ClientMessage,
-  type Lobby,
-  type LobbyOptions,
-} from '../net/protocol';
+import { HOST_CLIENT_ID, MAX_ONLINE_PLAYERS, type ClientMessage, type Lobby, type LobbyOptions } from '../net/protocol';
 import { HostTransport, type LinkStatus } from '../net/transport';
 
 export interface HostSnapshot {
@@ -56,7 +50,9 @@ export function lobbyProblems(lobby: Lobby): string[] {
     if (setupProblems(s.setup, lobby.options.prelude).length) problems.push(`${s.setup.name} tiene avisos pendientes.`);
   }
   // Cada uno elige en su celular al mismo tiempo: puede haber choques
-  const corps = lobby.seats.map((s) => s.setup.corporationId).filter((id): id is string => !!id && !findCorporation(id)?.repeatable);
+  const corps = lobby.seats
+    .map((s) => s.setup.corporationId)
+    .filter((id): id is string => !!id && !findCorporation(id)?.repeatable);
   if (new Set(corps).size < corps.length) problems.push('Hay corporaciones repetidas.');
   const preludes = lobby.options.prelude ? lobby.seats.flatMap((s) => s.setup.preludes.filter(Boolean)) : [];
   if (new Set(preludes).size < preludes.length) problems.push('Hay preludios repetidos.');
@@ -251,8 +247,7 @@ export class HostController {
         if (msg.seq <= (this.seqs[clientId] ?? 0)) return this.sendState(clientId);
         this.seqs[clientId] = msg.seq;
         const playerId = this.game?.online?.members[clientId];
-        const changed =
-          msg.t === 'action' ? this.applyFrom(clientId, msg.action) : !!playerId && this.undoFor(playerId);
+        const changed = msg.t === 'action' ? this.applyFrom(clientId, msg.action) : !!playerId && this.undoFor(playerId);
         // Rechazada o sin efecto: igual hay que confirmarle que llegó
         if (!changed) this.sendState(clientId);
         return;
@@ -281,7 +276,12 @@ export class HostController {
     } else if (this.lobby.seats.length < MAX_ONLINE_PLAYERS) {
       const used = new Set(this.lobby.seats.map((s) => s.setup.color));
       const color = PLAYER_COLORS.find((c) => !used.has(c.id))?.id ?? PLAYER_COLORS[0].id;
-      const seat = { clientId, setup: newPlayerSetup(this.lobby.seats.length + 1, color), ready: false, connected: true };
+      const seat = {
+        clientId,
+        setup: newPlayerSetup(this.lobby.seats.length + 1, color),
+        ready: false,
+        connected: true,
+      };
       this.lobby = { ...this.lobby, seats: [...this.lobby.seats, seat] };
     } else {
       this.transport.send(clientId, { t: 'error', message: 'La sala está llena (máximo 5 jugadores).' });

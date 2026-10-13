@@ -1,0 +1,24 @@
+/* ---------- Colocar loseta ---------- */
+/* Placa metálica como la de GEN, con medalla de "+" */
+.tile-btn {
+  position: relative; flex-shrink: 0; cursor: pointer;
+  width: 42px; height: 34px; display: grid; place-items: center;
+  background: var(--plate); border: 2px solid var(--plate-border); border-radius: 7px;
+}
+.tile-btn-plus {
+  position: absolute; top: -7px; right: -7px;
+  width: 17px; height: 17px; border-radius: 50%;
+  background: #2b2b2b; color: #fff; font-size: 13px; font-weight: 600; line-height: 17px; text-align: center;
+}
+.tile-options { display: flex; flex-direction: column; gap: 8px; }
+.tile-option {
+  display: flex; align-items: center; gap: 12px; cursor: pointer; text-align: left;
+  min-height: 56px; padding: 8px 12px; border-radius: var(--radius);
+  background: var(--surface); border: 1px solid var(--border);
+}
+.tile-option .grow { display: flex; flex-direction: column; gap: 2px; }
+.tile-option small { color: var(--muted); font-size: 0.78rem; }
+.tile-option.greenery { border-left: 4px solid #5fae3a; }
+.tile-option.city { border-left: 4px solid #9ea3a8; }
+.tile-option.ocean { border-left: 4px solid #3d8fd6; }
+.tile-option:disabled { opacity: 0.45; cursor: not-allowed; }

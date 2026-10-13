@@ -1,6 +1,6 @@
 import { IconArrowLeft } from '@tabler/icons-react';
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
-import { GameScreen } from '../components/GameScreen';
+import { GameScreen } from '../components/game/GameScreen';
 import { ClientController } from './clientController';
 import { ConnectionAlert, ConnectionBadge } from './ConnectionBadge';
 import { LobbyView } from './LobbyView';

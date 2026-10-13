@@ -1,10 +1,10 @@
 import { IconBook, IconChevronRight, IconDeviceMobile, IconLogin, IconTrash, IconUser, IconWifi } from '@tabler/icons-react';
 import { useState } from 'react';
 import { colorHex } from '../game/constants';
-import { isTerraformed } from '../game/logic';
+import { isTerraformed } from '../game';
 import type { Game } from '../game/types';
 import type { ClientSession } from '../online/session';
-import { GUIDE_TOPIC_COUNT, Guide } from './Guide';
+import { GUIDE_TOPIC_COUNT, Guide } from './guide/Guide';
 
 interface Props {
   games: Game[];
@@ -73,8 +73,7 @@ export function Home({ games, clientSession, onHost, onJoin, onSolo, onRejoin, o
               <button className="game-open" onClick={() => onOpen(g.id)}>
                 <div className="game-name">{g.name}</div>
                 <div className="game-meta">
-                  {g.online ? `Online · sos el anfitrión · código ${g.online.code}` : 'Sin conexión'} · Generación{' '}
-                  {g.generation}
+                  {g.online ? `Online · sos el anfitrión · código ${g.online.code}` : 'Sin conexión'} · Generación {g.generation}
                   {g.phase === 'finished' ? ' · Finalizada' : isTerraformed(g) ? ' · Marte terraformado' : ''} ·{' '}
                   {new Date(g.updatedAt).toLocaleDateString()}
                 </div>

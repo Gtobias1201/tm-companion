@@ -1,5 +1,5 @@
 import type { BoardId } from '../game/boards';
-import type { Action, PlayerSetup } from '../game/logic';
+import type { Action, PlayerSetup } from '../game';
 import type { Game } from '../game/types';
 
 /** Prefijo para que los ids de PeerJS no choquen con los de otras apps del servidor público. */

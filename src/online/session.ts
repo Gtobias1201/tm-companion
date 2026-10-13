@@ -1,4 +1,4 @@
-import { uid } from '../game/logic';
+import { uid } from '../game';
 
 const CLIENT_ID_KEY = 'tm-companion:client-id';
 const SESSION_KEY = 'tm-companion:session';

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import type { Game } from '../game/types';
-import { GameScreen } from '../components/GameScreen';
+import { GameScreen } from '../components/game/GameScreen';
 import { HOST_CLIENT_ID, newInviteCode } from '../net/protocol';
 import { ConnectionAlert, ConnectionBadge } from './ConnectionBadge';
 import { HostController, lobbyProblems } from './hostController';

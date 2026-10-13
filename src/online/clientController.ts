@@ -1,4 +1,4 @@
-import { normalizeGame, type Action, type PlayerSetup } from '../game/logic';
+import { normalizeGame, type Action, type PlayerSetup } from '../game';
 import type { Game } from '../game/types';
 import type { ClientMessage, HostMessage, Lobby } from '../net/protocol';
 import { ClientTransport, type LinkStatus } from '../net/transport';

@@ -1,0 +1,134 @@
+/* Modo día "Tablero clásico" y modo noche "Noche marciana". El modo se elige con
+   data-theme en <html> (automático según el celular o fijo desde la app: ver theme.ts). */
+:root {
+  --bg: #f7f4ef;
+  --surface: #ffffff;
+  --surface-2: #f1eee8;
+  --border: #e4dfd6;
+  --border-strong: #cfc8bb;
+  --text: #2c2c2a;
+  --muted: #7a776f;
+  --accent: #d85a30;
+  --accent-hover: #c24f29;
+  --on-accent: #ffffff;
+  --accent-soft: #faece7;
+  --accent-text: #993c1d;
+  --danger: #c0392b;
+  --success: #3b6d11;
+  --success-soft: #eaf3de;
+  --overlay: rgba(44, 44, 42, 0.4);
+
+  --c-mc: #b26a0e;
+  --c-steel: #8a5a32;
+  --c-titanium: #5f6b7a;
+  --c-plants: #3b6d11;
+  --c-energy: #534ab7;
+  --c-heat: #d85a30;
+  --c-temp: #d85a30;
+  --c-oxygen: #3b6d11;
+  --c-ocean: #185fa5;
+  --c-venus: #993556;
+
+  /* Tablero de recursos: placa marciana, tarjetas metálicas, visor y placa de producción */
+  --board: #3a2420;
+  --board-border: #5a1e17;
+  --board-legend: #d9c2ae;
+  --card: #cfd3d7;
+  --card-border: #a3a8ad;
+  --card-inner: #e8eaec;
+  --card-text: #3a2a1e;
+  --disp: #2b2320;
+  --disp-hover: #3a302c;
+  --disp-text: #fff3dc;
+  --prod-cell: #efe6d6;
+  --prod-cell-text: #3a2a1e;
+  /* Placas metálicas (generación, losetas) */
+  --plate: #d7dadd;
+  --plate-border: #9ea3a8;
+  --plate-text: #2b2b2b;
+
+  --radius: 12px;
+  --radius-sm: 8px;
+  --tap: 44px;
+  color-scheme: light;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:root[data-theme='dark'] {
+  --bg: #1c1614;
+  --surface: #2a211e;
+  --surface-2: #332824;
+  --border: #3d302b;
+  --border-strong: #54443c;
+  --text: #f1e6dc;
+  --muted: #a8968a;
+  --accent: #f0997b;
+  --accent-hover: #f5ad94;
+  --on-accent: #3a1408;
+  --accent-soft: #3a2620;
+  --accent-text: #f5c4b3;
+  --danger: #f09595;
+  --success: #97c459;
+  --success-soft: #26301f;
+  --overlay: rgba(8, 5, 4, 0.6);
+
+  --c-mc: #fac775;
+  --c-steel: #d9b48f;
+  --c-titanium: #b8c4d4;
+  --c-plants: #97c459;
+  --c-energy: #afa9ec;
+  --c-heat: #f0997b;
+  --c-temp: #f0997b;
+  --c-oxygen: #97c459;
+  --c-ocean: #85b7eb;
+  --c-venus: #ed93b1;
+
+  --board: #120d0c;
+  --board-border: #4a2a20;
+  --board-legend: #a8968a;
+  --card: #2f2825;
+  --card-border: #4d403a;
+  --card-inner: #3a312d;
+  --card-text: #f1e6dc;
+  --disp: #0e0b0a;
+  --disp-hover: #1d1715;
+  --disp-text: #ffd9b8;
+  --prod-cell: #3a2c24;
+  --prod-cell-text: #f3d9c0;
+  --plate: #3d302b;
+  --plate-border: #54443c;
+  --plate-text: #f1e6dc;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+}
+
+button, input, select { font: inherit; color: inherit; }
+
+h1, h2, h3 { margin: 0; line-height: 1.25; font-weight: 600; }
+h1 { font-size: 1.2rem; }
+h2 { font-size: 1.05rem; }
+h3 { font-size: 0.95rem; }
+strong { font-weight: 600; }
+
+.muted { color: var(--muted); }
+.small { font-size: 0.75rem; }
+
+.page {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.page.game { gap: 8px; padding-top: 10px; padding-bottom: calc(84px + env(safe-area-inset-bottom)); }

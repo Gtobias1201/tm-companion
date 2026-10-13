@@ -24,6 +24,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # No se publica una versión que rompe las reglas del juego
+      - run: npm test
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
