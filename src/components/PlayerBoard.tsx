@@ -19,6 +19,7 @@ import { DiscountsPanel } from './DiscountsPanel';
 import { TurnPanel } from './TurnPanel';
 import { Modal } from './Modal';
 import { SingleTileIcon, TileIcon } from './icons';
+import { useSwipeToLower } from './useSwipeToLower';
 
 interface Props {
   game: Game;
@@ -26,7 +27,7 @@ interface Props {
   dispatch: (action: Action) => void;
 }
 
-type Sheet = 'megacredits' | 'tr' | 'edit' | 'pay' | 'tiles' | null;
+type Sheet = 'megacredits' | 'edit' | 'pay' | 'tiles' | null;
 
 /** Pantalla principal del jugador, pensada para entrar entera en el celular. */
 export function PlayerBoard({ game, player, dispatch }: Props) {
@@ -98,10 +99,11 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
             +
           </span>
         </button>
-        <button className="tr-plate" onClick={() => setSheet('tr')} aria-label={`Nivel de terraformación ${player.tr}. Tocar para ajustar`}>
-          <span>TR</span>
-          <b>{player.tr}</b>
-        </button>
+        <TrPlate
+          tr={player.tr}
+          onRaise={() => dispatch({ type: 'tr', playerId: pid, delta: 1 })}
+          onLower={() => dispatch({ type: 'tr', playerId: pid, delta: -1 })}
+        />
         <button className="icon-btn mini" onClick={() => setSheet('edit')} aria-label="Editar jugador">
           <IconPencil size={16} />
         </button>
@@ -147,23 +149,6 @@ export function PlayerBoard({ game, player, dispatch }: Props) {
           </button>
           {corpNote && <p className="note">{player.corporation}: {corpNote}</p>}
           <DiscountsPanel player={player} dispatch={dispatch} />
-        </Modal>
-      )}
-      {sheet === 'tr' && (
-        <Modal title="Nivel de terraformación" onClose={() => setSheet(null)}>
-          <div className="tr-sheet">
-            <button className="step" onClick={() => dispatch({ type: 'tr', playerId: pid, delta: -1 })} aria-label="Restar TR">
-              −
-            </button>
-            <span className="tr-value">{player.tr}</span>
-            <button className="step" onClick={() => dispatch({ type: 'tr', playerId: pid, delta: 1 })} aria-label="Sumar TR">
-              +
-            </button>
-          </div>
-          <p className="note">
-            Cada TR da 1 M€ por generación y 1 PV. Los parámetros globales y los bosques ya lo suben solos; usá esto
-            para efectos de cartas.
-          </p>
         </Modal>
       )}
       {sheet === 'tiles' && (
@@ -250,5 +235,26 @@ function TilesSheet({ game, onPlace, onClose }: { game: Game; onPlace: (tile: Ti
         ))}
       </div>
     </Modal>
+  );
+}
+
+/** Placa de TR: tocar suma 1 (efectos de cartas); deslizar a la izquierda resta 1, como los medidores. */
+function TrPlate({ tr, onRaise, onLower }: { tr: number; onRaise: () => void; onLower: () => void }) {
+  const { offset, armed, handlers } = useSwipeToLower({ onRaise, onLower, canRaise: true, canLower: tr > 0 });
+  return (
+    <div className={`tr-swipe ${armed ? 'armed' : ''}`}>
+      <span className="gauge-under" aria-hidden>
+        −1
+      </span>
+      <button
+        className="tr-plate"
+        style={offset ? { transform: `translateX(${offset}px)` } : undefined}
+        aria-label={`Nivel de terraformación ${tr}. Tocar para sumar 1 TR; deslizar a la izquierda o flecha izquierda para restar 1`}
+        {...handlers}
+      >
+        <span>TR</span>
+        <b>{tr}</b>
+      </button>
+    </div>
   );
 }
